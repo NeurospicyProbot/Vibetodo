@@ -66,6 +66,12 @@ jobs:
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
+      - name: Set Fly.io secrets
+        run: flyctl secrets set RESEND_API_KEY="${RESEND_API_KEY}" --stage
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+
       - name: Deploy to Fly.io
         run: flyctl deploy --remote-only
         env:
