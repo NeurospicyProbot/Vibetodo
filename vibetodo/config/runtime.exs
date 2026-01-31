@@ -62,6 +62,17 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base
 
+  # Configure Mailgun for production email delivery
+  mailgun_api_key = System.get_env("MAILGUN_API_KEY")
+  mailgun_domain = System.get_env("MAILGUN_DOMAIN")
+
+  if mailgun_api_key && mailgun_domain do
+    config :vibetodo, Vibetodo.Mailer,
+      adapter: Swoosh.Adapters.Mailgun,
+      api_key: mailgun_api_key,
+      domain: mailgun_domain
+  end
+
   # ## SSL Support
   #
   # To get SSL working, you will need to add the `https` key
