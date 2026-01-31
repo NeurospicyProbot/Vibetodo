@@ -5,7 +5,16 @@ defmodule VibetodoWeb.TodoLive do
   alias Vibetodo.Projects
   alias Vibetodo.Areas
 
-  @review_steps [:inbox_zero, :next_actions, :waiting_for, :projects, :areas, :someday_maybe, :capture, :complete]
+  @review_steps [
+    :inbox_zero,
+    :next_actions,
+    :waiting_for,
+    :projects,
+    :areas,
+    :someday_maybe,
+    :capture,
+    :complete
+  ]
 
   @impl true
   def mount(_params, _session, socket) do
@@ -380,11 +389,13 @@ defmodule VibetodoWeb.TodoLive do
   @impl true
   def handle_event("create_project", params, socket) do
     title = String.trim(params["title"] || "")
-    area_id = case params["area_id"] do
-      "" -> nil
-      nil -> nil
-      id -> String.to_integer(id)
-    end
+
+    area_id =
+      case params["area_id"] do
+        "" -> nil
+        nil -> nil
+        id -> String.to_integer(id)
+      end
 
     if title != "" do
       attrs = %{title: title}
@@ -639,7 +650,7 @@ defmodule VibetodoWeb.TodoLive do
           </span>
           <span class="text-sm text-gray-500">{inbox_count(@todos)}</span>
         </button>
-
+        
     <!-- Today -->
         <button
           phx-click="select_today"
@@ -652,13 +663,17 @@ defmodule VibetodoWeb.TodoLive do
               viewBox="0 0 20 20"
               fill="currentColor"
             >
-              <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+              <path
+                fill-rule="evenodd"
+                d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+                clip-rule="evenodd"
+              />
             </svg>
             Today
           </span>
           <span class="text-sm text-gray-500">{today_count(@todos)}</span>
         </button>
-
+        
     <!-- Next Actions -->
         <button
           phx-click="select_next_actions"
@@ -719,7 +734,7 @@ defmodule VibetodoWeb.TodoLive do
           </span>
           <span class="text-sm text-gray-500">{someday_maybe_count(@todos)}</span>
         </button>
-
+        
     <!-- Weekly Review -->
         <button
           phx-click="start_weekly_review"
@@ -731,11 +746,15 @@ defmodule VibetodoWeb.TodoLive do
             viewBox="0 0 20 20"
             fill="currentColor"
           >
-            <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+            <path
+              fill-rule="evenodd"
+              d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+              clip-rule="evenodd"
+            />
           </svg>
           Weekly Review
         </button>
-
+        
     <!-- Areas of Focus Header -->
         <div class="flex items-center justify-between mt-6 mb-2">
           <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Areas</h3>
@@ -757,7 +776,7 @@ defmodule VibetodoWeb.TodoLive do
             </svg>
           </button>
         </div>
-
+        
     <!-- New Area Form -->
         <%= if @show_area_form do %>
           <form phx-submit="create_area" class="mb-2">
@@ -772,7 +791,7 @@ defmodule VibetodoWeb.TodoLive do
             />
           </form>
         <% end %>
-
+        
     <!-- Areas List -->
         <div class="space-y-1">
           <%= for area <- @areas do %>
@@ -801,7 +820,7 @@ defmodule VibetodoWeb.TodoLive do
         <%= if @areas == [] && !@show_area_form do %>
           <p class="text-sm text-gray-400 px-3 py-2">No areas yet</p>
         <% end %>
-
+        
     <!-- Projects Header -->
         <div class="flex items-center justify-between mt-6 mb-2">
           <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Projects</h3>
@@ -1079,18 +1098,25 @@ defmodule VibetodoWeb.TodoLive do
                     <div class={"w-3 h-3 rounded-full #{if i == @review_step, do: "bg-indigo-500", else: if(i < @review_step, do: "bg-indigo-200", else: "bg-gray-200")}"} />
                   <% end %>
                 </div>
-                <span class="text-sm text-gray-500">Step {@review_step + 1} of {length(@review_steps)}</span>
+                <span class="text-sm text-gray-500">
+                  Step {@review_step + 1} of {length(@review_steps)}
+                </span>
               </div>
 
-              <h2 class="text-xl font-semibold text-gray-800 mb-4 text-center">{review_step_name(step)}</h2>
-
-              <!-- Step content -->
+              <h2 class="text-xl font-semibold text-gray-800 mb-4 text-center">
+                {review_step_name(step)}
+              </h2>
+              
+    <!-- Step content -->
               <%= case step do %>
                 <% :inbox_zero -> %>
                   <div class="text-center">
                     <% inbox = inbox_count(@todos) %>
                     <%= if inbox > 0 do %>
-                      <p class="text-gray-600 mb-4">You have <span class="font-bold text-indigo-600">{inbox}</span> items in your inbox.</p>
+                      <p class="text-gray-600 mb-4">
+                        You have <span class="font-bold text-indigo-600">{inbox}</span>
+                        items in your inbox.
+                      </p>
                       <button
                         phx-click="start_processing"
                         class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors mb-4"
@@ -1103,14 +1129,15 @@ defmodule VibetodoWeb.TodoLive do
                       <p class="text-gray-600">Your inbox is empty. Great job!</p>
                     <% end %>
                   </div>
-
                 <% :next_actions -> %>
                   <div>
                     <% next_actions = Enum.filter(@todos, &(&1.is_next_action && !&1.completed)) %>
                     <%= if next_actions == [] do %>
                       <p class="text-center text-gray-500">No next actions defined.</p>
                     <% else %>
-                      <p class="text-gray-600 mb-4 text-center">Review your next actions. Are they still relevant?</p>
+                      <p class="text-gray-600 mb-4 text-center">
+                        Review your next actions. Are they still relevant?
+                      </p>
                       <ul class="space-y-2">
                         <%= for todo <- next_actions do %>
                           <li class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
@@ -1134,19 +1161,22 @@ defmodule VibetodoWeb.TodoLive do
                       </ul>
                     <% end %>
                   </div>
-
                 <% :waiting_for -> %>
                   <div>
                     <% waiting = Enum.filter(@todos, &(&1.waiting_for && !&1.completed)) %>
                     <%= if waiting == [] do %>
                       <p class="text-center text-gray-500">Nothing in Waiting For.</p>
                     <% else %>
-                      <p class="text-gray-600 mb-4 text-center">Check on delegated items. Need to follow up?</p>
+                      <p class="text-gray-600 mb-4 text-center">
+                        Check on delegated items. Need to follow up?
+                      </p>
                       <ul class="space-y-2">
                         <%= for todo <- waiting do %>
                           <li class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                             <span class="flex-1">{todo.title}</span>
-                            <span class="text-xs text-cyan-600 bg-cyan-50 px-2 py-1 rounded">{todo.waiting_for}</span>
+                            <span class="text-xs text-cyan-600 bg-cyan-50 px-2 py-1 rounded">
+                              {todo.waiting_for}
+                            </span>
                             <button
                               phx-click="clear_waiting_for"
                               phx-value-id={todo.id}
@@ -1159,7 +1189,6 @@ defmodule VibetodoWeb.TodoLive do
                       </ul>
                     <% end %>
                   </div>
-
                 <% :projects -> %>
                   <div>
                     <%= if @projects == [] do %>
@@ -1169,19 +1198,33 @@ defmodule VibetodoWeb.TodoLive do
                       <%= if project do %>
                         <% stats = Projects.get_project_stats(project) %>
                         <div class="text-center mb-4">
-                          <p class="text-xs text-gray-400">Project {@review_project_index + 1} of {length(@projects)}</p>
+                          <p class="text-xs text-gray-400">
+                            Project {@review_project_index + 1} of {length(@projects)}
+                          </p>
                           <h3 class="text-lg font-medium text-gray-800">{project.title}</h3>
-                          <p class="text-sm text-gray-500">{stats.completed}/{stats.total} completed</p>
+                          <p class="text-sm text-gray-500">
+                            {stats.completed}/{stats.total} completed
+                          </p>
                         </div>
                         <ul class="space-y-2 mb-4 max-h-48 overflow-auto">
                           <%= for todo <- project.todos do %>
                             <li class="flex items-center gap-2 p-2 bg-gray-50 rounded text-sm">
-                              <input type="checkbox" checked={todo.completed} phx-click="toggle" phx-value-id={todo.id} class="w-4 h-4" />
-                              <span class={if todo.completed, do: "line-through text-gray-400"}>{todo.title}</span>
+                              <input
+                                type="checkbox"
+                                checked={todo.completed}
+                                phx-click="toggle"
+                                phx-value-id={todo.id}
+                                class="w-4 h-4"
+                              />
+                              <span class={if todo.completed, do: "line-through text-gray-400"}>
+                                {todo.title}
+                              </span>
                             </li>
                           <% end %>
                         </ul>
-                        <p class="text-sm text-gray-500 text-center mb-4">Does this project have a clear next action?</p>
+                        <p class="text-sm text-gray-500 text-center mb-4">
+                          Does this project have a clear next action?
+                        </p>
                         <div class="flex gap-2 justify-center">
                           <button
                             phx-click="review_mark_project"
@@ -1200,7 +1243,6 @@ defmodule VibetodoWeb.TodoLive do
                       <% end %>
                     <% end %>
                   </div>
-
                 <% :areas -> %>
                   <div>
                     <%= if @areas == [] do %>
@@ -1210,11 +1252,17 @@ defmodule VibetodoWeb.TodoLive do
                       <%= if area do %>
                         <% stats = Areas.get_area_stats(area) %>
                         <div class="text-center mb-4">
-                          <p class="text-xs text-gray-400">Area {@review_area_index + 1} of {length(@areas)}</p>
+                          <p class="text-xs text-gray-400">
+                            Area {@review_area_index + 1} of {length(@areas)}
+                          </p>
                           <h3 class="text-lg font-medium text-gray-800">{area.title}</h3>
-                          <p class="text-sm text-gray-500">{stats.active_projects} projects, {stats.active_todos} todos</p>
+                          <p class="text-sm text-gray-500">
+                            {stats.active_projects} projects, {stats.active_todos} todos
+                          </p>
                         </div>
-                        <p class="text-sm text-gray-500 text-center mb-4">Are you giving this area enough attention?</p>
+                        <p class="text-sm text-gray-500 text-center mb-4">
+                          Are you giving this area enough attention?
+                        </p>
                         <div class="flex gap-2 justify-center">
                           <button
                             phx-click="review_mark_area"
@@ -1233,7 +1281,6 @@ defmodule VibetodoWeb.TodoLive do
                       <% end %>
                     <% end %>
                   </div>
-
                 <% :someday_maybe -> %>
                   <div>
                     <% someday = Enum.filter(@todos, &(&1.is_someday_maybe && !&1.completed)) %>
@@ -1264,7 +1311,6 @@ defmodule VibetodoWeb.TodoLive do
                       </ul>
                     <% end %>
                   </div>
-
                 <% :capture -> %>
                   <div class="text-center">
                     <p class="text-gray-600 mb-4">Anything new come up during the review?</p>
@@ -1285,7 +1331,6 @@ defmodule VibetodoWeb.TodoLive do
                       </button>
                     </form>
                   </div>
-
                 <% :complete -> %>
                   <div class="text-center py-8">
                     <div class="text-5xl mb-4">🎉</div>
@@ -1299,8 +1344,8 @@ defmodule VibetodoWeb.TodoLive do
                     </button>
                   </div>
               <% end %>
-
-              <!-- Navigation -->
+              
+    <!-- Navigation -->
               <%= if step != :complete do %>
                 <div class="flex justify-between mt-8 pt-4 border-t">
                   <button
@@ -1362,7 +1407,11 @@ defmodule VibetodoWeb.TodoLive do
                       viewBox="0 0 20 20"
                       fill="currentColor"
                     >
-                      <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                   </button>
                   <input
@@ -1399,7 +1448,7 @@ defmodule VibetodoWeb.TodoLive do
                       <% end %>
                     </select>
                   <% end %>
-    <!-- Project Selector (only show when not in project view) -->
+                  <!-- Project Selector (only show when not in project view) -->
                   <%= if @selected_project == nil && @projects != [] do %>
                     <select
                       phx-change="assign_to_project"

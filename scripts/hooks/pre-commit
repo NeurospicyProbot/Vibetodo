@@ -1,0 +1,56 @@
+#!/usr/bin/env sh
+# Pre-commit hook for Vibetodo
+#
+# Runs formatting checks, compilation, and tests before allowing commits.
+# This ensures CI won't fail on formatting or test issues.
+#
+# Install: ./scripts/setup-hooks.sh
+# bd-hooks-version: 0.49.1
+
+# ============================================
+# Run Elixir formatting and tests
+# ============================================
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+VIBETODO_DIR="$REPO_ROOT/vibetodo"
+
+if [ -d "$VIBETODO_DIR" ]; then
+    echo "Running pre-commit checks (format, compile, test)..."
+    cd "$VIBETODO_DIR" || exit 1
+
+    # Run format check (not auto-fix, to match CI behavior)
+    if ! mix format --check-formatted; then
+        echo ""
+        echo "❌ Formatting check failed!"
+        echo "   Run 'cd vibetodo && mix format' to fix."
+        exit 1
+    fi
+
+    # Compile with warnings as errors (matches CI)
+    if ! mix compile --warnings-as-errors; then
+        echo ""
+        echo "❌ Compilation failed or has warnings!"
+        exit 1
+    fi
+
+    # Run tests
+    if ! mix test; then
+        echo ""
+        echo "❌ Tests failed!"
+        exit 1
+    fi
+
+    echo "✅ All pre-commit checks passed!"
+    cd "$REPO_ROOT" || exit 1
+fi
+
+# ============================================
+# Run beads hook (if available)
+# ============================================
+
+# Check if bd is available
+if ! command -v bd >/dev/null 2>&1; then
+    echo "Note: bd command not found, skipping beads hook" >&2
+    exit 0
+fi
+
+exec bd hook pre-commit "$@"
