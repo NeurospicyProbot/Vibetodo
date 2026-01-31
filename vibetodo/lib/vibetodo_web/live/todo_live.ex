@@ -685,282 +685,288 @@ defmodule VibetodoWeb.TodoLive do
       phx-key="/"
     >
       <!-- Sidebar -->
-      <div class="w-64 bg-white shadow-lg p-4">
+      <aside class="w-64 bg-white shadow-lg p-4" aria-label="Navigation">
         <h2 class="text-lg font-semibold text-gray-700 mb-4">Vibetodo</h2>
-        
+        <nav aria-label="Main navigation">
+          
     <!-- Inbox -->
-        <button
-          phx-click="select_inbox"
-          class={"w-full text-left px-3 py-2 rounded-lg mb-1 flex items-center justify-between #{if @view_mode == :inbox, do: "bg-blue-100 text-blue-700", else: "hover:bg-gray-100 text-gray-700"}"}
-        >
-          <span class="flex items-center gap-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 2h10v7h-2l-1 2H8l-1-2H5V5z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            Inbox
-          </span>
-          <span class="text-sm text-gray-500">{inbox_count(@todos)}</span>
-        </button>
-        
-    <!-- Today -->
-        <button
-          phx-click="select_today"
-          class={"w-full text-left px-3 py-2 rounded-lg mb-1 flex items-center justify-between #{if @view_mode == :today, do: "bg-orange-100 text-orange-700", else: "hover:bg-gray-100 text-gray-700"}"}
-        >
-          <span class="flex items-center gap-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            Today
-          </span>
-          <span class="text-sm text-gray-500">{today_count(@todos)}</span>
-        </button>
-        
-    <!-- Next Actions -->
-        <button
-          phx-click="select_next_actions"
-          class={"w-full text-left px-3 py-2 rounded-lg mb-1 flex items-center justify-between #{if @view_mode == :next_actions, do: "bg-amber-100 text-amber-700", else: "hover:bg-gray-100 text-gray-700"}"}
-        >
-          <span class="flex items-center gap-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-            Next Actions
-          </span>
-          <span class="text-sm text-gray-500">{next_actions_count(@todos)}</span>
-        </button>
-        
-    <!-- Waiting For -->
-        <button
-          phx-click="select_waiting_for"
-          class={"w-full text-left px-3 py-2 rounded-lg mb-1 flex items-center justify-between #{if @view_mode == :waiting_for, do: "bg-cyan-100 text-cyan-700", else: "hover:bg-gray-100 text-gray-700"}"}
-        >
-          <span class="flex items-center gap-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            Waiting For
-          </span>
-          <span class="text-sm text-gray-500">{waiting_for_count(@todos)}</span>
-        </button>
-        
-    <!-- Someday/Maybe -->
-        <button
-          phx-click="select_someday_maybe"
-          class={"w-full text-left px-3 py-2 rounded-lg mb-2 flex items-center justify-between #{if @view_mode == :someday_maybe, do: "bg-violet-100 text-violet-700", else: "hover:bg-gray-100 text-gray-700"}"}
-        >
-          <span class="flex items-center gap-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
-            </svg>
-            Someday/Maybe
-          </span>
-          <span class="text-sm text-gray-500">{someday_maybe_count(@todos)}</span>
-        </button>
-        
-    <!-- Weekly Review -->
-        <button
-          phx-click="start_weekly_review"
-          class={"w-full text-left px-3 py-2 rounded-lg mt-4 mb-2 flex items-center gap-2 #{if @view_mode == :weekly_review, do: "bg-indigo-100 text-indigo-700", else: "bg-indigo-50 hover:bg-indigo-100 text-indigo-600"}"}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          Weekly Review
-        </button>
-        
-    <!-- Areas of Focus Header -->
-        <div class="flex items-center justify-between mt-6 mb-2">
-          <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Areas</h3>
           <button
-            phx-click="show_area_form"
-            class="text-gray-400 hover:text-gray-600"
+            phx-click="select_inbox"
+            class={"w-full text-left px-3 py-2 rounded-lg mb-1 flex items-center justify-between #{if @view_mode == :inbox, do: "bg-blue-100 text-blue-700", else: "hover:bg-gray-100 text-gray-700"}"}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </button>
-        </div>
-        
-    <!-- New Area Form -->
-        <%= if @show_area_form do %>
-          <form phx-submit="create_area" class="mb-2">
-            <input
-              type="text"
-              name="title"
-              value={@new_area}
-              phx-change="update_area_input"
-              placeholder="Area name..."
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
-              autofocus
-            />
-          </form>
-        <% end %>
-        
-    <!-- Areas List -->
-        <div class="space-y-1">
-          <%= for area <- @areas do %>
-            <% stats = Areas.get_area_stats(area) %>
-            <button
-              phx-click="select_area"
-              phx-value-id={area.id}
-              class={"w-full text-left px-3 py-2 rounded-lg flex items-center justify-between #{if @selected_area && @selected_area.id == area.id, do: "bg-emerald-100 text-emerald-700", else: "hover:bg-gray-100 text-gray-700"}"}
-            >
-              <span class="flex items-center gap-2 truncate">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4 flex-shrink-0"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z" />
-                </svg>
-                <span class="truncate">{area.title}</span>
-              </span>
-              <span class="text-xs text-gray-500">{stats.total}</span>
-            </button>
-          <% end %>
-        </div>
-
-        <%= if @areas == [] && !@show_area_form do %>
-          <p class="text-sm text-gray-400 px-3 py-2">No areas yet</p>
-        <% end %>
-        
-    <!-- Projects Header -->
-        <div class="flex items-center justify-between mt-6 mb-2">
-          <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Projects</h3>
-          <button
-            phx-click="show_project_form"
-            class="text-gray-400 hover:text-gray-600"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </button>
-        </div>
-        
-    <!-- New Project Form -->
-        <%= if @show_project_form do %>
-          <form phx-submit="create_project" class="mb-2 space-y-2">
-            <input
-              type="text"
-              name="title"
-              value={@new_project}
-              phx-change="update_project_input"
-              placeholder="Project name..."
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
-              autofocus
-            />
-            <%= if @areas != [] do %>
-              <select
-                name="area_id"
-                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            <span class="flex items-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
               >
-                <option value="">No area</option>
-                <%= for area <- @areas do %>
-                  <option value={area.id}>{area.title}</option>
-                <% end %>
-              </select>
-            <% end %>
-          </form>
-        <% end %>
-        
-    <!-- Projects List -->
-        <div class="space-y-1">
-          <%= for project <- @projects do %>
-            <% stats = Projects.get_project_stats(project) %>
-            <button
-              phx-click="select_project"
-              phx-value-id={project.id}
-              class={"w-full text-left px-3 py-2 rounded-lg flex items-center justify-between #{if @selected_project && @selected_project.id == project.id, do: "bg-blue-100 text-blue-700", else: "hover:bg-gray-100 text-gray-700"}"}
+                <path
+                  fill-rule="evenodd"
+                  d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 2h10v7h-2l-1 2H8l-1-2H5V5z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              Inbox
+            </span>
+            <span class="text-sm text-gray-500">{inbox_count(@todos)}</span>
+          </button>
+          
+    <!-- Today -->
+          <button
+            phx-click="select_today"
+            class={"w-full text-left px-3 py-2 rounded-lg mb-1 flex items-center justify-between #{if @view_mode == :today, do: "bg-orange-100 text-orange-700", else: "hover:bg-gray-100 text-gray-700"}"}
+          >
+            <span class="flex items-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              Today
+            </span>
+            <span class="text-sm text-gray-500">{today_count(@todos)}</span>
+          </button>
+          
+    <!-- Next Actions -->
+          <button
+            phx-click="select_next_actions"
+            class={"w-full text-left px-3 py-2 rounded-lg mb-1 flex items-center justify-between #{if @view_mode == :next_actions, do: "bg-amber-100 text-amber-700", else: "hover:bg-gray-100 text-gray-700"}"}
+          >
+            <span class="flex items-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              Next Actions
+            </span>
+            <span class="text-sm text-gray-500">{next_actions_count(@todos)}</span>
+          </button>
+          
+    <!-- Waiting For -->
+          <button
+            phx-click="select_waiting_for"
+            class={"w-full text-left px-3 py-2 rounded-lg mb-1 flex items-center justify-between #{if @view_mode == :waiting_for, do: "bg-cyan-100 text-cyan-700", else: "hover:bg-gray-100 text-gray-700"}"}
+          >
+            <span class="flex items-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              Waiting For
+            </span>
+            <span class="text-sm text-gray-500">{waiting_for_count(@todos)}</span>
+          </button>
+          
+    <!-- Someday/Maybe -->
+          <button
+            phx-click="select_someday_maybe"
+            class={"w-full text-left px-3 py-2 rounded-lg mb-2 flex items-center justify-between #{if @view_mode == :someday_maybe, do: "bg-violet-100 text-violet-700", else: "hover:bg-gray-100 text-gray-700"}"}
+          >
+            <span class="flex items-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
+              </svg>
+              Someday/Maybe
+            </span>
+            <span class="text-sm text-gray-500">{someday_maybe_count(@todos)}</span>
+          </button>
+          
+    <!-- Weekly Review -->
+          <button
+            phx-click="start_weekly_review"
+            class={"w-full text-left px-3 py-2 rounded-lg mt-4 mb-2 flex items-center gap-2 #{if @view_mode == :weekly_review, do: "bg-indigo-100 text-indigo-700", else: "bg-indigo-50 hover:bg-indigo-100 text-indigo-600"}"}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
             >
-              <span class="flex items-center gap-2 truncate">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4 flex-shrink-0"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-                </svg>
-                <span class="truncate">{project.title}</span>
-              </span>
-              <span class="text-xs text-gray-500">{stats.completed}/{stats.total}</span>
+              <path
+                fill-rule="evenodd"
+                d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Weekly Review
+          </button>
+          
+    <!-- Areas of Focus Header -->
+          <div class="flex items-center justify-between mt-6 mb-2">
+            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Areas</h3>
+            <button
+              phx-click="show_area_form"
+              class="text-gray-400 hover:text-gray-600"
+              aria-label="Add new area"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                  clip-rule="evenodd"
+                />
+              </svg>
             </button>
+          </div>
+          
+    <!-- New Area Form -->
+          <%= if @show_area_form do %>
+            <form phx-submit="create_area" class="mb-2">
+              <input
+                type="text"
+                name="title"
+                value={@new_area}
+                phx-change="update_area_input"
+                placeholder="Area name..."
+                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                autofocus
+              />
+            </form>
           <% end %>
-        </div>
+          
+    <!-- Areas List -->
+          <div class="space-y-1">
+            <%= for area <- @areas do %>
+              <% stats = Areas.get_area_stats(area) %>
+              <button
+                phx-click="select_area"
+                phx-value-id={area.id}
+                class={"w-full text-left px-3 py-2 rounded-lg flex items-center justify-between #{if @selected_area && @selected_area.id == area.id, do: "bg-emerald-100 text-emerald-700", else: "hover:bg-gray-100 text-gray-700"}"}
+              >
+                <span class="flex items-center gap-2 truncate">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4 flex-shrink-0"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z" />
+                  </svg>
+                  <span class="truncate">{area.title}</span>
+                </span>
+                <span class="text-xs text-gray-500">{stats.total}</span>
+              </button>
+            <% end %>
+          </div>
 
-        <%= if @projects == [] && !@show_project_form do %>
-          <p class="text-sm text-gray-400 px-3 py-2">No projects yet</p>
-        <% end %>
-      </div>
+          <%= if @areas == [] && !@show_area_form do %>
+            <p class="text-sm text-gray-400 px-3 py-2">No areas yet</p>
+          <% end %>
+          
+    <!-- Projects Header -->
+          <div class="flex items-center justify-between mt-6 mb-2">
+            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Projects</h3>
+            <button
+              phx-click="show_project_form"
+              class="text-gray-400 hover:text-gray-600"
+              aria-label="Add new project"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+          </div>
+          
+    <!-- New Project Form -->
+          <%= if @show_project_form do %>
+            <form phx-submit="create_project" class="mb-2 space-y-2">
+              <input
+                type="text"
+                name="title"
+                value={@new_project}
+                phx-change="update_project_input"
+                placeholder="Project name..."
+                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+                autofocus
+              />
+              <%= if @areas != [] do %>
+                <select
+                  name="area_id"
+                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">No area</option>
+                  <%= for area <- @areas do %>
+                    <option value={area.id}>{area.title}</option>
+                  <% end %>
+                </select>
+              <% end %>
+            </form>
+          <% end %>
+          
+    <!-- Projects List -->
+          <div class="space-y-1">
+            <%= for project <- @projects do %>
+              <% stats = Projects.get_project_stats(project) %>
+              <button
+                phx-click="select_project"
+                phx-value-id={project.id}
+                class={"w-full text-left px-3 py-2 rounded-lg flex items-center justify-between #{if @selected_project && @selected_project.id == project.id, do: "bg-blue-100 text-blue-700", else: "hover:bg-gray-100 text-gray-700"}"}
+              >
+                <span class="flex items-center gap-2 truncate">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4 flex-shrink-0"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+                  </svg>
+                  <span class="truncate">{project.title}</span>
+                </span>
+                <span class="text-xs text-gray-500">{stats.completed}/{stats.total}</span>
+              </button>
+            <% end %>
+          </div>
+
+          <%= if @projects == [] && !@show_project_form do %>
+            <p class="text-sm text-gray-400 px-3 py-2">No projects yet</p>
+          <% end %>
+        </nav>
+      </aside>
       
     <!-- Main Content -->
-      <div class="flex-1 p-8 overflow-auto">
+      <main class="flex-1 p-8 overflow-auto">
         <div class="max-w-2xl mx-auto">
           <div class="flex items-center justify-between mb-6">
             <h1 class="text-2xl font-bold text-gray-800">
@@ -1543,12 +1549,14 @@ defmodule VibetodoWeb.TodoLive do
                     phx-click="delete"
                     phx-value-id={todo.id}
                     class="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+                    aria-label={"Delete task: #{todo.title}"}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       class="h-5 w-5"
                       viewBox="0 0 20 20"
                       fill="currentColor"
+                      aria-hidden="true"
                     >
                       <path
                         fill-rule="evenodd"
@@ -1591,7 +1599,7 @@ defmodule VibetodoWeb.TodoLive do
             </p>
           <% end %>
         </div>
-      </div>
+      </main>
     </div>
     """
   end
