@@ -91,6 +91,42 @@ defmodule VibetodoWeb.TodoLive do
   end
 
   @impl true
+  def handle_event("select_waiting_for", _, socket) do
+    {:noreply,
+     socket
+     |> assign(:selected_project, nil)
+     |> assign(:view_mode, :waiting_for)}
+  end
+
+  @impl true
+  def handle_event("mark_waiting_for", %{"id" => id, "person" => person}, socket) do
+    person = String.trim(person)
+
+    if person != "" do
+      todo = Todos.get_todo!(id)
+      {:ok, _} = Todos.mark_waiting_for(todo, person)
+
+      {:noreply,
+       socket
+       |> assign(:todos, Todos.list_todos())
+       |> maybe_refresh_project()}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("clear_waiting_for", %{"id" => id}, socket) do
+    todo = Todos.get_todo!(id)
+    {:ok, _} = Todos.clear_waiting_for(todo)
+
+    {:noreply,
+     socket
+     |> assign(:todos, Todos.list_todos())
+     |> maybe_refresh_project()}
+  end
+
+  @impl true
   def handle_event("start_processing", _, socket) do
     {:noreply,
      socket
@@ -154,6 +190,23 @@ defmodule VibetodoWeb.TodoLive do
   @impl true
   def handle_event("process_skip", _, socket) do
     {:noreply, advance_processing(socket)}
+  end
+
+  @impl true
+  def handle_event("process_waiting_for", %{"todo_id" => id, "person" => person}, socket) do
+    person = String.trim(person)
+
+    if person != "" do
+      todo = Todos.get_todo!(id)
+      {:ok, _} = Todos.mark_waiting_for(todo, person)
+
+      {:noreply,
+       socket
+       |> assign(:todos, Todos.list_todos())
+       |> advance_processing()}
+    else
+      {:noreply, socket}
+    end
   end
 
   @impl true
@@ -254,9 +307,12 @@ defmodule VibetodoWeb.TodoLive do
 
   defp filtered_todos(todos, nil, :inbox), do: Enum.filter(todos, &is_nil(&1.project_id))
   defp filtered_todos(todos, nil, :next_actions), do: Enum.filter(todos, &(&1.is_next_action && !&1.completed))
+  defp filtered_todos(todos, nil, :waiting_for), do: Enum.filter(todos, &(&1.waiting_for && !&1.completed))
   defp filtered_todos(_todos, project, _view_mode), do: project.todos
 
   defp next_actions_count(todos), do: Enum.count(todos, &(&1.is_next_action && !&1.completed))
+
+  defp waiting_for_count(todos), do: Enum.count(todos, &(&1.waiting_for && !&1.completed))
 
   defp inbox_count(todos), do: Enum.count(todos, &is_nil(&1.project_id))
 
@@ -289,7 +345,7 @@ defmodule VibetodoWeb.TodoLive do
         <!-- Next Actions -->
         <button
           phx-click="select_next_actions"
-          class={"w-full text-left px-3 py-2 rounded-lg mb-2 flex items-center justify-between #{if @view_mode == :next_actions, do: "bg-amber-100 text-amber-700", else: "hover:bg-gray-100 text-gray-700"}"}
+          class={"w-full text-left px-3 py-2 rounded-lg mb-1 flex items-center justify-between #{if @view_mode == :next_actions, do: "bg-amber-100 text-amber-700", else: "hover:bg-gray-100 text-gray-700"}"}
         >
           <span class="flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -298,6 +354,20 @@ defmodule VibetodoWeb.TodoLive do
             Next Actions
           </span>
           <span class="text-sm text-gray-500"><%= next_actions_count(@todos) %></span>
+        </button>
+
+        <!-- Waiting For -->
+        <button
+          phx-click="select_waiting_for"
+          class={"w-full text-left px-3 py-2 rounded-lg mb-2 flex items-center justify-between #{if @view_mode == :waiting_for, do: "bg-cyan-100 text-cyan-700", else: "hover:bg-gray-100 text-gray-700"}"}
+        >
+          <span class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+            </svg>
+            Waiting For
+          </span>
+          <span class="text-sm text-gray-500"><%= waiting_for_count(@todos) %></span>
         </button>
 
         <!-- Projects Header -->
@@ -361,6 +431,7 @@ defmodule VibetodoWeb.TodoLive do
               <%= cond do %>
                 <% @selected_project -> %><%= @selected_project.title %>
                 <% @view_mode == :next_actions -> %>Next Actions
+                <% @view_mode == :waiting_for -> %>Waiting For
                 <% @view_mode == :processing -> %>Processing Inbox
                 <% true -> %>Inbox
               <% end %>
@@ -457,6 +528,25 @@ defmodule VibetodoWeb.TodoLive do
                     </button>
                   </div>
 
+                  <!-- Waiting For -->
+                  <div class="border-t pt-4 mb-4">
+                    <form phx-submit="process_waiting_for" class="flex gap-2">
+                      <input type="hidden" name="todo_id" value={current_item.id} />
+                      <input
+                        type="text"
+                        name="person"
+                        placeholder="Waiting for who?"
+                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                      />
+                      <button
+                        type="submit"
+                        class="px-3 py-2 bg-cyan-50 text-cyan-600 rounded-lg hover:bg-cyan-100 transition-colors text-sm font-medium"
+                      >
+                        Delegate
+                      </button>
+                    </form>
+                  </div>
+
                   <%= if @projects != [] do %>
                     <div class="border-t pt-4">
                       <p class="text-xs text-gray-400 mb-2 text-center">Or assign to a project:</p>
@@ -510,9 +600,16 @@ defmodule VibetodoWeb.TodoLive do
                   phx-value-id={todo.id}
                   class="w-5 h-5 text-blue-500 rounded focus:ring-blue-500 cursor-pointer"
                 />
-                <span class={"flex-1 #{if todo.completed, do: "line-through text-gray-400", else: "text-gray-700"}"}>
-                  <%= todo.title %>
-                </span>
+                <div class="flex-1">
+                  <span class={"#{if todo.completed, do: "line-through text-gray-400", else: "text-gray-700"}"}>
+                    <%= todo.title %>
+                  </span>
+                  <%= if todo.waiting_for do %>
+                    <span class="ml-2 text-xs text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded">
+                      Waiting: <%= todo.waiting_for %>
+                    </span>
+                  <% end %>
+                </div>
 
                 <!-- Project Selector (only show in Inbox) -->
                 <%= if @selected_project == nil && @projects != [] do %>
@@ -549,6 +646,7 @@ defmodule VibetodoWeb.TodoLive do
               <%= cond do %>
                 <% @selected_project -> %>No tasks in this project yet.
                 <% @view_mode == :next_actions -> %>No next actions. Star items to mark them as next actions!
+                <% @view_mode == :waiting_for -> %>Nothing in Waiting For. Use the clock icon to delegate items.
                 <% true -> %>Your inbox is empty. Capture what's on your mind!
               <% end %>
             </p>

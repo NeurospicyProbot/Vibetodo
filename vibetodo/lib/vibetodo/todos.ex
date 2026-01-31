@@ -70,4 +70,28 @@ defmodule Vibetodo.Todos do
     |> order_by(asc: :inserted_at)
     |> Repo.all()
   end
+
+  @doc """
+  Returns all waiting for items (incomplete todos with waiting_for set).
+  """
+  def list_waiting_for do
+    Todo
+    |> where([t], not is_nil(t.waiting_for) and t.completed == false)
+    |> order_by(asc: :delegated_at)
+    |> Repo.all()
+  end
+
+  @doc """
+  Marks a todo as waiting for someone.
+  """
+  def mark_waiting_for(%Todo{} = todo, person) do
+    update_todo(todo, %{waiting_for: person, delegated_at: DateTime.utc_now()})
+  end
+
+  @doc """
+  Clears waiting for status from a todo.
+  """
+  def clear_waiting_for(%Todo{} = todo) do
+    update_todo(todo, %{waiting_for: nil, delegated_at: nil})
+  end
 end
