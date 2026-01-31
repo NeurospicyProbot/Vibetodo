@@ -57,4 +57,13 @@ defmodule VibetodoWeb.Router do
     post "/users/log-in", UserSessionController, :create
     delete "/users/log-out", UserSessionController, :delete
   end
+
+  # Enable Swoosh mailbox preview in development
+  if Application.compile_env(:vibetodo, :dev_routes) do
+    scope "/dev" do
+      pipe_through :browser
+
+      forward "/mailbox", Plug.Swoosh.MailboxPreview
+    end
+  end
 end
