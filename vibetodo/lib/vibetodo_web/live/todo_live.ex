@@ -53,18 +53,32 @@ defmodule VibetodoWeb.TodoLive do
   end
 
   @impl true
+  def handle_event("focus_input", _, socket) do
+    {:noreply, push_event(socket, "focus-input", %{})}
+  end
+
+  @impl true
   def render(assigns) do
     ~H"""
-    <div class="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg">
-      <h1 class="text-2xl font-bold text-gray-800 mb-6">Todo List</h1>
+    <div
+      class="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg"
+      phx-window-keydown="focus_input"
+      phx-key="/"
+    >
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Inbox</h1>
+        <span class="text-xs text-gray-400">Press / to capture</span>
+      </div>
 
       <form phx-submit="add" class="flex gap-2 mb-6">
         <input
           type="text"
           name="title"
+          id="capture-input"
           value={@new_todo}
           phx-change="update_input"
-          placeholder="What needs to be done?"
+          phx-hook="FocusInput"
+          placeholder="What's on your mind?"
           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           autofocus
         />
@@ -72,7 +86,7 @@ defmodule VibetodoWeb.TodoLive do
           type="submit"
           class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
         >
-          Add
+          Capture
         </button>
       </form>
 
@@ -103,8 +117,12 @@ defmodule VibetodoWeb.TodoLive do
       </ul>
 
       <%= if @todos == [] do %>
-        <p class="text-center text-gray-500 mt-4">No todos yet. Add one above!</p>
+        <p class="text-center text-gray-500 mt-4">Your inbox is empty. Capture what's on your mind!</p>
       <% end %>
+
+      <p class="text-xs text-gray-400 mt-4 text-center">
+        <%= length(@todos) %> item<%= if length(@todos) != 1, do: "s" %> to process
+      </p>
     </div>
     """
   end
