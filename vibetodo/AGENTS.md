@@ -33,9 +33,27 @@ belongs_to :project, Project
 The LiveView uses `@view_mode` assign: `:inbox`, `:next_actions`, `:waiting_for`, `:someday_maybe`, `:processing`, `:project`
 
 ### Deployment
-- Fly.io with SQLite persistence
-- GitHub Actions CI/CD (auto-deploy on main)
-- Health endpoint: `/api/health`
+- **Hosting:** Fly.io with SQLite persistence (Sydney region)
+- **CI/CD:** GitHub Actions at repo root (`../.github/workflows/ci.yml`)
+  - Runs tests + format check on every PR/push
+  - Auto-deploys to Fly.io on push to main
+  - Uses `working-directory: vibetodo` for all commands
+- **Health endpoint:** `/api/health`
+- **URL:** https://vibetodo.fly.dev
+
+### Repository Structure
+```
+Vibetodo/                    # Repo root
+├── .github/workflows/ci.yml # CI/CD pipeline (NOT in vibetodo/)
+├── .beads/                  # Issue tracking
+├── AGENTS.md                # Beads workflow instructions
+└── vibetodo/                # Phoenix app
+    ├── lib/
+    ├── priv/
+    ├── fly.toml
+    ├── Dockerfile
+    └── AGENTS.md            # This file (Phoenix guidelines)
+```
 
 ## Project guidelines
 
