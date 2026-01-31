@@ -29,7 +29,8 @@ defmodule VibetodoWeb.TodoLive do
           {:noreply,
            socket
            |> assign(:todos, Todos.list_todos())
-           |> assign(:new_todo, "")}
+           |> assign(:new_todo, "")
+           |> maybe_refresh_project()}
 
         {:error, _changeset} ->
           {:noreply, socket}
@@ -44,7 +45,10 @@ defmodule VibetodoWeb.TodoLive do
     todo = Todos.get_todo!(id)
     {:ok, _todo} = Todos.toggle_todo(todo)
 
-    {:noreply, assign(socket, :todos, Todos.list_todos())}
+    {:noreply,
+     socket
+     |> assign(:todos, Todos.list_todos())
+     |> maybe_refresh_project()}
   end
 
   @impl true
@@ -52,7 +56,10 @@ defmodule VibetodoWeb.TodoLive do
     todo = Todos.get_todo!(id)
     {:ok, _todo} = Todos.delete_todo(todo)
 
-    {:noreply, assign(socket, :todos, Todos.list_todos())}
+    {:noreply,
+     socket
+     |> assign(:todos, Todos.list_todos())
+     |> maybe_refresh_project()}
   end
 
   @impl true
