@@ -1,0 +1,28 @@
+app = 'vibetodo'
+primary_region = 'syd'
+
+[build]
+
+[deploy]
+  release_command = '/app/bin/migrate'
+
+[env]
+  PHX_HOST = 'vibetodo.fly.dev'
+  DATABASE_PATH = '/data/vibetodo.db'
+
+[http_service]
+  internal_port = 4000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+
+[mounts]
+  source = 'vibetodo_data'
+  destination = '/data'

@@ -1,0 +1,49 @@
+# Ignore .fetch files
+.fetch
+
+# Ignore _build directory
+/_build/
+
+# Ignore deps directory
+/deps/
+
+# Ignore node_modules
+/assets/node_modules/
+
+# Ignore test artifacts
+/cover/
+/doc/
+/.formatter.exs
+/test/
+
+# Ignore dialyzer artifacts
+/priv/plts/
+
+# Ignore git
+.git
+.gitignore
+
+# Ignore editor files
+*.swp
+*.swo
+*~
+
+# Ignore IDE configs
+.idea/
+.vscode/
+
+# Ignore database files
+*.db
+*.db-shm
+*.db-wal
+
+# Ignore env files
+.env*
+
+# Ignore docker files
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Ignore fly config
+fly.toml

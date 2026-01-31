@@ -11,15 +11,19 @@
 ### 1.2 Production Configuration
 - [ ] Configure `config/runtime.exs` for production secrets
 - [ ] Set up SSL/TLS certificates
-- [ ] Configure production database (consider PostgreSQL for multi-instance)
+- [ ] Set up Fly.io persistent volume for SQLite
 - [ ] Set `PHX_HOST` and `SECRET_KEY_BASE` environment variables
 
-### 1.3 CI/CD Pipeline
+### 1.3 Database Migration (Future)
+- [ ] Switch from SQLite to Postgres when needed (multi-device, redundancy)
+- [ ] Options: Fly Postgres, Supabase, or Neon (all have free tiers)
+
+### 1.4 CI/CD Pipeline
 - [ ] Add GitHub Actions workflow for automated testing
 - [ ] Configure automatic deployment on main branch push
 - [ ] Add health check endpoint
 
-### 1.4 Monitoring & Logging
+### 1.5 Monitoring & Logging
 - [ ] Set up error tracking (Sentry or similar)
 - [ ] Configure log aggregation
 - [ ] Add basic application metrics
