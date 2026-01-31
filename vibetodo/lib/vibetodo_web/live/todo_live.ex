@@ -24,7 +24,11 @@ defmodule VibetodoWeb.TodoLive do
 
     if title != "" do
       attrs = %{title: title}
-      attrs = if socket.assigns.selected_project, do: Map.put(attrs, :project_id, socket.assigns.selected_project.id), else: attrs
+
+      attrs =
+        if socket.assigns.selected_project,
+          do: Map.put(attrs, :project_id, socket.assigns.selected_project.id),
+          else: attrs
 
       case Todos.create_todo(attrs) do
         {:ok, _todo} ->
@@ -242,6 +246,7 @@ defmodule VibetodoWeb.TodoLive do
   @impl true
   def handle_event("select_project", %{"id" => id}, socket) do
     project = Projects.get_project!(id)
+
     {:noreply,
      socket
      |> assign(:selected_project, project)
@@ -285,7 +290,11 @@ defmodule VibetodoWeb.TodoLive do
   end
 
   @impl true
-  def handle_event("assign_to_project", %{"todo_id" => todo_id, "project_id" => project_id}, socket) do
+  def handle_event(
+        "assign_to_project",
+        %{"todo_id" => todo_id, "project_id" => project_id},
+        socket
+      ) do
     todo = Todos.get_todo!(todo_id)
     project_id = if project_id == "", do: nil, else: String.to_integer(project_id)
     {:ok, _todo} = Todos.update_todo(todo, %{project_id: project_id})
@@ -325,9 +334,16 @@ defmodule VibetodoWeb.TodoLive do
   end
 
   defp filtered_todos(todos, nil, :inbox), do: Enum.filter(todos, &is_nil(&1.project_id))
-  defp filtered_todos(todos, nil, :next_actions), do: Enum.filter(todos, &(&1.is_next_action && !&1.completed))
-  defp filtered_todos(todos, nil, :waiting_for), do: Enum.filter(todos, &(&1.waiting_for && !&1.completed))
-  defp filtered_todos(todos, nil, :someday_maybe), do: Enum.filter(todos, &(&1.is_someday_maybe && !&1.completed))
+
+  defp filtered_todos(todos, nil, :next_actions),
+    do: Enum.filter(todos, &(&1.is_next_action && !&1.completed))
+
+  defp filtered_todos(todos, nil, :waiting_for),
+    do: Enum.filter(todos, &(&1.waiting_for && !&1.completed))
+
+  defp filtered_todos(todos, nil, :someday_maybe),
+    do: Enum.filter(todos, &(&1.is_someday_maybe && !&1.completed))
+
   defp filtered_todos(_todos, project, _view_mode), do: project.todos
 
   defp next_actions_count(todos), do: Enum.count(todos, &(&1.is_next_action && !&1.completed))
@@ -349,77 +365,114 @@ defmodule VibetodoWeb.TodoLive do
       <!-- Sidebar -->
       <div class="w-64 bg-white shadow-lg p-4">
         <h2 class="text-lg font-semibold text-gray-700 mb-4">Vibetodo</h2>
-
-        <!-- Inbox -->
+        
+    <!-- Inbox -->
         <button
           phx-click="select_inbox"
           class={"w-full text-left px-3 py-2 rounded-lg mb-1 flex items-center justify-between #{if @view_mode == :inbox, do: "bg-blue-100 text-blue-700", else: "hover:bg-gray-100 text-gray-700"}"}
         >
           <span class="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 2h10v7h-2l-1 2H8l-1-2H5V5z" clip-rule="evenodd" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 2h10v7h-2l-1 2H8l-1-2H5V5z"
+                clip-rule="evenodd"
+              />
             </svg>
             Inbox
           </span>
-          <span class="text-sm text-gray-500"><%= inbox_count(@todos) %></span>
+          <span class="text-sm text-gray-500">{inbox_count(@todos)}</span>
         </button>
-
-        <!-- Next Actions -->
+        
+    <!-- Next Actions -->
         <button
           phx-click="select_next_actions"
           class={"w-full text-left px-3 py-2 rounded-lg mb-1 flex items-center justify-between #{if @view_mode == :next_actions, do: "bg-amber-100 text-amber-700", else: "hover:bg-gray-100 text-gray-700"}"}
         >
           <span class="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
             </svg>
             Next Actions
           </span>
-          <span class="text-sm text-gray-500"><%= next_actions_count(@todos) %></span>
+          <span class="text-sm text-gray-500">{next_actions_count(@todos)}</span>
         </button>
-
-        <!-- Waiting For -->
+        
+    <!-- Waiting For -->
         <button
           phx-click="select_waiting_for"
           class={"w-full text-left px-3 py-2 rounded-lg mb-1 flex items-center justify-between #{if @view_mode == :waiting_for, do: "bg-cyan-100 text-cyan-700", else: "hover:bg-gray-100 text-gray-700"}"}
         >
           <span class="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                clip-rule="evenodd"
+              />
             </svg>
             Waiting For
           </span>
-          <span class="text-sm text-gray-500"><%= waiting_for_count(@todos) %></span>
+          <span class="text-sm text-gray-500">{waiting_for_count(@todos)}</span>
         </button>
-
-        <!-- Someday/Maybe -->
+        
+    <!-- Someday/Maybe -->
         <button
           phx-click="select_someday_maybe"
           class={"w-full text-left px-3 py-2 rounded-lg mb-2 flex items-center justify-between #{if @view_mode == :someday_maybe, do: "bg-violet-100 text-violet-700", else: "hover:bg-gray-100 text-gray-700"}"}
         >
           <span class="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
               <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
             </svg>
             Someday/Maybe
           </span>
-          <span class="text-sm text-gray-500"><%= someday_maybe_count(@todos) %></span>
+          <span class="text-sm text-gray-500">{someday_maybe_count(@todos)}</span>
         </button>
-
-        <!-- Projects Header -->
+        
+    <!-- Projects Header -->
         <div class="flex items-center justify-between mt-6 mb-2">
           <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Projects</h3>
           <button
             phx-click="show_project_form"
             class="text-gray-400 hover:text-gray-600"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                clip-rule="evenodd"
+              />
             </svg>
           </button>
         </div>
-
-        <!-- New Project Form -->
+        
+    <!-- New Project Form -->
         <%= if @show_project_form do %>
           <form phx-submit="create_project" class="mb-2">
             <input
@@ -433,8 +486,8 @@ defmodule VibetodoWeb.TodoLive do
             />
           </form>
         <% end %>
-
-        <!-- Projects List -->
+        
+    <!-- Projects List -->
         <div class="space-y-1">
           <%= for project <- @projects do %>
             <% stats = Projects.get_project_stats(project) %>
@@ -444,12 +497,17 @@ defmodule VibetodoWeb.TodoLive do
               class={"w-full text-left px-3 py-2 rounded-lg flex items-center justify-between #{if @selected_project && @selected_project.id == project.id, do: "bg-blue-100 text-blue-700", else: "hover:bg-gray-100 text-gray-700"}"}
             >
               <span class="flex items-center gap-2 truncate">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 flex-shrink-0"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
                   <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
                 </svg>
-                <span class="truncate"><%= project.title %></span>
+                <span class="truncate">{project.title}</span>
               </span>
-              <span class="text-xs text-gray-500"><%= stats.completed %>/<%= stats.total %></span>
+              <span class="text-xs text-gray-500">{stats.completed}/{stats.total}</span>
             </button>
           <% end %>
         </div>
@@ -458,19 +516,25 @@ defmodule VibetodoWeb.TodoLive do
           <p class="text-sm text-gray-400 px-3 py-2">No projects yet</p>
         <% end %>
       </div>
-
-      <!-- Main Content -->
+      
+    <!-- Main Content -->
       <div class="flex-1 p-8 overflow-auto">
         <div class="max-w-2xl mx-auto">
           <div class="flex items-center justify-between mb-6">
             <h1 class="text-2xl font-bold text-gray-800">
               <%= cond do %>
-                <% @selected_project -> %><%= @selected_project.title %>
-                <% @view_mode == :next_actions -> %>Next Actions
-                <% @view_mode == :waiting_for -> %>Waiting For
-                <% @view_mode == :someday_maybe -> %>Someday/Maybe
-                <% @view_mode == :processing -> %>Processing Inbox
-                <% true -> %>Inbox
+                <% @selected_project -> %>
+                  {@selected_project.title}
+                <% @view_mode == :next_actions -> %>
+                  Next Actions
+                <% @view_mode == :waiting_for -> %>
+                  Waiting For
+                <% @view_mode == :someday_maybe -> %>
+                  Someday/Maybe
+                <% @view_mode == :processing -> %>
+                  Processing Inbox
+                <% true -> %>
+                  Inbox
               <% end %>
             </h1>
             <div class="flex items-center gap-3">
@@ -520,9 +584,9 @@ defmodule VibetodoWeb.TodoLive do
               <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
                 <div class="text-center mb-6">
                   <p class="text-xs text-gray-400 mb-2">
-                    Item <%= @processing_index + 1 %> of <%= inbox_count(@todos) %>
+                    Item {@processing_index + 1} of {inbox_count(@todos)}
                   </p>
-                  <h2 class="text-xl font-medium text-gray-800"><%= current_item.title %></h2>
+                  <h2 class="text-xl font-medium text-gray-800">{current_item.title}</h2>
                 </div>
 
                 <div class="border-t pt-6">
@@ -574,8 +638,8 @@ defmodule VibetodoWeb.TodoLive do
                       Skip · Decide later
                     </button>
                   </div>
-
-                  <!-- Waiting For -->
+                  
+    <!-- Waiting For -->
                   <div class="border-t pt-4 mb-4">
                     <form phx-submit="process_waiting_for" class="flex gap-2">
                       <input type="hidden" name="todo_id" value={current_item.id} />
@@ -605,7 +669,7 @@ defmodule VibetodoWeb.TodoLive do
                             phx-value-project_id={project.id}
                             class="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
                           >
-                            <%= project.title %>
+                            {project.title}
                           </button>
                         <% end %>
                       </div>
@@ -627,84 +691,109 @@ defmodule VibetodoWeb.TodoLive do
               </div>
             <% end %>
           <% else %>
-          <ul class="space-y-2">
-            <%= for todo <- filtered_todos(@todos, @selected_project, @view_mode) do %>
-              <li class="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm group">
-                <button
-                  phx-click="toggle_next_action"
-                  phx-value-id={todo.id}
-                  class={"flex-shrink-0 #{if todo.is_next_action, do: "text-amber-500", else: "text-gray-300 hover:text-amber-400"}"}
-                  title={if todo.is_next_action, do: "Remove from Next Actions", else: "Mark as Next Action"}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                </button>
-                <input
-                  type="checkbox"
-                  checked={todo.completed}
-                  phx-click="toggle"
-                  phx-value-id={todo.id}
-                  class="w-5 h-5 text-blue-500 rounded focus:ring-blue-500 cursor-pointer"
-                />
-                <div class="flex-1">
-                  <span class={"#{if todo.completed, do: "line-through text-gray-400", else: "text-gray-700"}"}>
-                    <%= todo.title %>
-                  </span>
-                  <%= if todo.waiting_for do %>
-                    <span class="ml-2 text-xs text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded">
-                      Waiting: <%= todo.waiting_for %>
-                    </span>
-                  <% end %>
-                </div>
-
-                <!-- Project Selector (only show in Inbox) -->
-                <%= if @selected_project == nil && @projects != [] do %>
-                  <select
-                    phx-change="assign_to_project"
-                    phx-value-todo_id={todo.id}
-                    name="project_id"
-                    class="text-xs px-2 py-1 border border-gray-200 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+            <ul class="space-y-2">
+              <%= for todo <- filtered_todos(@todos, @selected_project, @view_mode) do %>
+                <li class="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm group">
+                  <button
+                    phx-click="toggle_next_action"
+                    phx-value-id={todo.id}
+                    class={"flex-shrink-0 #{if todo.is_next_action, do: "text-amber-500", else: "text-gray-300 hover:text-amber-400"}"}
+                    title={
+                      if todo.is_next_action,
+                        do: "Remove from Next Actions",
+                        else: "Mark as Next Action"
+                    }
                   >
-                    <option value="">No project</option>
-                    <%= for project <- @projects do %>
-                      <option value={project.id} selected={todo.project_id == project.id}>
-                        <%= project.title %>
-                      </option>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  </button>
+                  <input
+                    type="checkbox"
+                    checked={todo.completed}
+                    phx-click="toggle"
+                    phx-value-id={todo.id}
+                    class="w-5 h-5 text-blue-500 rounded focus:ring-blue-500 cursor-pointer"
+                  />
+                  <div class="flex-1">
+                    <span class={"#{if todo.completed, do: "line-through text-gray-400", else: "text-gray-700"}"}>
+                      {todo.title}
+                    </span>
+                    <%= if todo.waiting_for do %>
+                      <span class="ml-2 text-xs text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded">
+                        Waiting: {todo.waiting_for}
+                      </span>
                     <% end %>
-                  </select>
-                <% end %>
+                  </div>
+                  
+    <!-- Project Selector (only show in Inbox) -->
+                  <%= if @selected_project == nil && @projects != [] do %>
+                    <select
+                      phx-change="assign_to_project"
+                      phx-value-todo_id={todo.id}
+                      name="project_id"
+                      class="text-xs px-2 py-1 border border-gray-200 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <option value="">No project</option>
+                      <%= for project <- @projects do %>
+                        <option value={project.id} selected={todo.project_id == project.id}>
+                          {project.title}
+                        </option>
+                      <% end %>
+                    </select>
+                  <% end %>
 
-                <button
-                  phx-click="delete"
-                  phx-value-id={todo.id}
-                  class="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                  </svg>
-                </button>
-              </li>
-            <% end %>
-          </ul>
-
-          <%= if filtered_todos(@todos, @selected_project, @view_mode) == [] do %>
-            <p class="text-center text-gray-500 mt-8">
-              <%= cond do %>
-                <% @selected_project -> %>No tasks in this project yet.
-                <% @view_mode == :next_actions -> %>No next actions. Star items to mark them as next actions!
-                <% @view_mode == :waiting_for -> %>Nothing in Waiting For. Use the clock icon to delegate items.
-                <% @view_mode == :someday_maybe -> %>No someday/maybe items. Park ideas here during processing!
-                <% true -> %>Your inbox is empty. Capture what's on your mind!
+                  <button
+                    phx-click="delete"
+                    phx-value-id={todo.id}
+                    class="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                </li>
               <% end %>
-            </p>
-          <% end %>
+            </ul>
 
-          <p class="text-xs text-gray-400 mt-6 text-center">
-            <% todos = filtered_todos(@todos, @selected_project, @view_mode) %>
-            <%= length(todos) %> item<%= if length(todos) != 1, do: "s" %>
-            · <%= Enum.count(todos, & &1.completed) %> completed
-          </p>
+            <%= if filtered_todos(@todos, @selected_project, @view_mode) == [] do %>
+              <p class="text-center text-gray-500 mt-8">
+                <%= cond do %>
+                  <% @selected_project -> %>
+                    No tasks in this project yet.
+                  <% @view_mode == :next_actions -> %>
+                    No next actions. Star items to mark them as next actions!
+                  <% @view_mode == :waiting_for -> %>
+                    Nothing in Waiting For. Use the clock icon to delegate items.
+                  <% @view_mode == :someday_maybe -> %>
+                    No someday/maybe items. Park ideas here during processing!
+                  <% true -> %>
+                    Your inbox is empty. Capture what's on your mind!
+                <% end %>
+              </p>
+            <% end %>
+
+            <p class="text-xs text-gray-400 mt-6 text-center">
+              <% todos = filtered_todos(@todos, @selected_project, @view_mode) %>
+              {length(todos)} item{if length(todos) != 1, do: "s"} · {Enum.count(
+                todos,
+                & &1.completed
+              )} completed
+            </p>
           <% end %>
         </div>
       </div>

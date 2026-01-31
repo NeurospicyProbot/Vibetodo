@@ -20,8 +20,9 @@ defmodule VibetodoWeb.Router do
     live "/", TodoLive
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", VibetodoWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", VibetodoWeb do
+    pipe_through :api
+
+    get "/health", HealthController, :index
+  end
 end

@@ -18,7 +18,15 @@ defmodule Vibetodo.Todos.Todo do
   @doc false
   def changeset(todo, attrs) do
     todo
-    |> cast(attrs, [:title, :completed, :project_id, :is_next_action, :is_someday_maybe, :waiting_for, :delegated_at])
+    |> cast(attrs, [
+      :title,
+      :completed,
+      :project_id,
+      :is_next_action,
+      :is_someday_maybe,
+      :waiting_for,
+      :delegated_at
+    ])
     |> validate_required([:title])
   end
 end
