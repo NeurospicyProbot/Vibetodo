@@ -1,4 +1,41 @@
-This is a web application written using the Phoenix web framework.
+This is a GTD (Getting Things Done) todo application built with Phoenix LiveView.
+
+## Vibetodo Architecture
+
+### GTD Features
+- **Inbox** - Capture everything (items without a project)
+- **Next Actions** - Items marked with `is_next_action: true`
+- **Waiting For** - Items with `waiting_for` set (delegated)
+- **Someday/Maybe** - Items marked with `is_someday_maybe: true`
+- **Projects** - Multi-step outcomes with associated todos
+- **Processing Workflow** - GTD clarify step, process inbox one item at a time
+
+### Key Files
+- `lib/vibetodo/todos.ex` - Todos context (CRUD, queries)
+- `lib/vibetodo/todos/todo.ex` - Todo schema
+- `lib/vibetodo/projects.ex` - Projects context
+- `lib/vibetodo/projects/project.ex` - Project schema
+- `lib/vibetodo_web/live/todo_live.ex` - Main LiveView (single-page app)
+- `lib/vibetodo_web/controllers/health_controller.ex` - Health endpoint
+
+### Todo Schema Fields
+```elixir
+field :title, :string
+field :completed, :boolean, default: false
+field :is_next_action, :boolean, default: false
+field :is_someday_maybe, :boolean, default: false
+field :waiting_for, :string
+field :delegated_at, :utc_datetime
+belongs_to :project, Project
+```
+
+### View Modes
+The LiveView uses `@view_mode` assign: `:inbox`, `:next_actions`, `:waiting_for`, `:someday_maybe`, `:processing`, `:project`
+
+### Deployment
+- Fly.io with SQLite persistence
+- GitHub Actions CI/CD (auto-deploy on main)
+- Health endpoint: `/api/health`
 
 ## Project guidelines
 
