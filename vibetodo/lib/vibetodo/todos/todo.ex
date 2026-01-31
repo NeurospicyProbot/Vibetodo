@@ -11,6 +11,7 @@ defmodule Vibetodo.Todos.Todo do
     field :delegated_at, :utc_datetime
 
     belongs_to :project, Vibetodo.Projects.Project
+    belongs_to :area, Vibetodo.Areas.Area
 
     timestamps(type: :utc_datetime)
   end
@@ -22,6 +23,7 @@ defmodule Vibetodo.Todos.Todo do
       :title,
       :completed,
       :project_id,
+      :area_id,
       :is_next_action,
       :is_someday_maybe,
       :waiting_for,

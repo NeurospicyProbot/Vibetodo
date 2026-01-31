@@ -7,6 +7,7 @@ defmodule Vibetodo.Projects.Project do
     field :status, :string, default: "active"
     field :notes, :string
 
+    belongs_to :area, Vibetodo.Areas.Area
     has_many :todos, Vibetodo.Todos.Todo
 
     timestamps(type: :utc_datetime)
@@ -17,7 +18,7 @@ defmodule Vibetodo.Projects.Project do
   @doc false
   def changeset(project, attrs) do
     project
-    |> cast(attrs, [:title, :status, :notes])
+    |> cast(attrs, [:title, :status, :notes, :area_id])
     |> validate_required([:title])
     |> validate_inclusion(:status, @statuses)
   end

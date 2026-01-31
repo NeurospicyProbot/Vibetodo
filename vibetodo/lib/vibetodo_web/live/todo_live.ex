@@ -3,6 +3,7 @@ defmodule VibetodoWeb.TodoLive do
 
   alias Vibetodo.Todos
   alias Vibetodo.Projects
+  alias Vibetodo.Areas
 
   @impl true
   def mount(_params, _session, socket) do
@@ -10,10 +11,14 @@ defmodule VibetodoWeb.TodoLive do
      socket
      |> assign(:todos, Todos.list_todos())
      |> assign(:projects, Projects.list_projects())
+     |> assign(:areas, Areas.list_areas())
      |> assign(:new_todo, "")
      |> assign(:new_project, "")
+     |> assign(:new_area, "")
      |> assign(:selected_project, nil)
+     |> assign(:selected_area, nil)
      |> assign(:show_project_form, false)
+     |> assign(:show_area_form, false)
      |> assign(:view_mode, :inbox)
      |> assign(:processing_index, 0)}
   end
@@ -83,6 +88,7 @@ defmodule VibetodoWeb.TodoLive do
     {:noreply,
      socket
      |> assign(:selected_project, nil)
+     |> assign(:selected_area, nil)
      |> assign(:view_mode, :inbox)}
   end
 
@@ -91,6 +97,7 @@ defmodule VibetodoWeb.TodoLive do
     {:noreply,
      socket
      |> assign(:selected_project, nil)
+     |> assign(:selected_area, nil)
      |> assign(:view_mode, :next_actions)}
   end
 
@@ -99,6 +106,7 @@ defmodule VibetodoWeb.TodoLive do
     {:noreply,
      socket
      |> assign(:selected_project, nil)
+     |> assign(:selected_area, nil)
      |> assign(:view_mode, :waiting_for)}
   end
 
@@ -107,6 +115,7 @@ defmodule VibetodoWeb.TodoLive do
     {:noreply,
      socket
      |> assign(:selected_project, nil)
+     |> assign(:selected_area, nil)
      |> assign(:view_mode, :someday_maybe)}
   end
 
@@ -143,6 +152,7 @@ defmodule VibetodoWeb.TodoLive do
     {:noreply,
      socket
      |> assign(:selected_project, nil)
+     |> assign(:selected_area, nil)
      |> assign(:view_mode, :processing)
      |> assign(:processing_index, 0)}
   end
@@ -250,6 +260,7 @@ defmodule VibetodoWeb.TodoLive do
     {:noreply,
      socket
      |> assign(:selected_project, project)
+     |> assign(:selected_area, nil)
      |> assign(:view_mode, :project)}
   end
 
@@ -264,11 +275,19 @@ defmodule VibetodoWeb.TodoLive do
   end
 
   @impl true
-  def handle_event("create_project", %{"title" => title}, socket) do
-    title = String.trim(title)
+  def handle_event("create_project", params, socket) do
+    title = String.trim(params["title"] || "")
+    area_id = case params["area_id"] do
+      "" -> nil
+      nil -> nil
+      id -> String.to_integer(id)
+    end
 
     if title != "" do
-      case Projects.create_project(%{title: title}) do
+      attrs = %{title: title}
+      attrs = if area_id, do: Map.put(attrs, :area_id, area_id), else: attrs
+
+      case Projects.create_project(attrs) do
         {:ok, _project} ->
           {:noreply,
            socket
@@ -290,6 +309,53 @@ defmodule VibetodoWeb.TodoLive do
   end
 
   @impl true
+  def handle_event("select_area", %{"id" => id}, socket) do
+    area = Areas.get_area!(id)
+
+    {:noreply,
+     socket
+     |> assign(:selected_area, area)
+     |> assign(:selected_project, nil)
+     |> assign(:view_mode, :area)}
+  end
+
+  @impl true
+  def handle_event("show_area_form", _, socket) do
+    {:noreply, assign(socket, :show_area_form, true)}
+  end
+
+  @impl true
+  def handle_event("hide_area_form", _, socket) do
+    {:noreply, assign(socket, :show_area_form, false)}
+  end
+
+  @impl true
+  def handle_event("create_area", %{"title" => title}, socket) do
+    title = String.trim(title)
+
+    if title != "" do
+      case Areas.create_area(%{title: title}) do
+        {:ok, _area} ->
+          {:noreply,
+           socket
+           |> assign(:areas, Areas.list_areas())
+           |> assign(:new_area, "")
+           |> assign(:show_area_form, false)}
+
+        {:error, _changeset} ->
+          {:noreply, socket}
+      end
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("update_area_input", %{"title" => title}, socket) do
+    {:noreply, assign(socket, :new_area, title)}
+  end
+
+  @impl true
   def handle_event(
         "assign_to_project",
         %{"todo_id" => todo_id, "project_id" => project_id},
@@ -305,9 +371,33 @@ defmodule VibetodoWeb.TodoLive do
      |> maybe_refresh_project()}
   end
 
+  @impl true
+  def handle_event(
+        "assign_to_area",
+        %{"todo_id" => todo_id, "area_id" => area_id},
+        socket
+      ) do
+    todo = Todos.get_todo!(todo_id)
+    area_id = if area_id == "", do: nil, else: String.to_integer(area_id)
+    {:ok, _todo} = Todos.update_todo(todo, %{area_id: area_id})
+
+    {:noreply,
+     socket
+     |> assign(:todos, Todos.list_todos())
+     |> maybe_refresh_area()}
+  end
+
   defp maybe_refresh_project(socket) do
     if socket.assigns.selected_project do
       assign(socket, :selected_project, Projects.get_project!(socket.assigns.selected_project.id))
+    else
+      socket
+    end
+  end
+
+  defp maybe_refresh_area(socket) do
+    if socket.assigns.selected_area do
+      assign(socket, :selected_area, Areas.get_area!(socket.assigns.selected_area.id))
     else
       socket
     end
@@ -333,18 +423,22 @@ defmodule VibetodoWeb.TodoLive do
     Enum.at(inbox_items, index)
   end
 
-  defp filtered_todos(todos, nil, :inbox), do: Enum.filter(todos, &is_nil(&1.project_id))
+  defp filtered_todos(todos, nil, nil, :inbox), do: Enum.filter(todos, &is_nil(&1.project_id))
 
-  defp filtered_todos(todos, nil, :next_actions),
+  defp filtered_todos(todos, nil, nil, :next_actions),
     do: Enum.filter(todos, &(&1.is_next_action && !&1.completed))
 
-  defp filtered_todos(todos, nil, :waiting_for),
+  defp filtered_todos(todos, nil, nil, :waiting_for),
     do: Enum.filter(todos, &(&1.waiting_for && !&1.completed))
 
-  defp filtered_todos(todos, nil, :someday_maybe),
+  defp filtered_todos(todos, nil, nil, :someday_maybe),
     do: Enum.filter(todos, &(&1.is_someday_maybe && !&1.completed))
 
-  defp filtered_todos(_todos, project, _view_mode), do: project.todos
+  defp filtered_todos(_todos, project, _area, :project), do: project.todos
+
+  defp filtered_todos(_todos, _project, area, :area), do: area.todos
+
+  defp filtered_todos(todos, nil, nil, _view_mode), do: todos
 
   defp next_actions_count(todos), do: Enum.count(todos, &(&1.is_next_action && !&1.completed))
 
@@ -450,6 +544,72 @@ defmodule VibetodoWeb.TodoLive do
           <span class="text-sm text-gray-500">{someday_maybe_count(@todos)}</span>
         </button>
         
+    <!-- Areas of Focus Header -->
+        <div class="flex items-center justify-between mt-6 mb-2">
+          <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Areas</h3>
+          <button
+            phx-click="show_area_form"
+            class="text-gray-400 hover:text-gray-600"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
+        </div>
+
+    <!-- New Area Form -->
+        <%= if @show_area_form do %>
+          <form phx-submit="create_area" class="mb-2">
+            <input
+              type="text"
+              name="title"
+              value={@new_area}
+              phx-change="update_area_input"
+              placeholder="Area name..."
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              autofocus
+            />
+          </form>
+        <% end %>
+
+    <!-- Areas List -->
+        <div class="space-y-1">
+          <%= for area <- @areas do %>
+            <% stats = Areas.get_area_stats(area) %>
+            <button
+              phx-click="select_area"
+              phx-value-id={area.id}
+              class={"w-full text-left px-3 py-2 rounded-lg flex items-center justify-between #{if @selected_area && @selected_area.id == area.id, do: "bg-emerald-100 text-emerald-700", else: "hover:bg-gray-100 text-gray-700"}"}
+            >
+              <span class="flex items-center gap-2 truncate">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 flex-shrink-0"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z" />
+                </svg>
+                <span class="truncate">{area.title}</span>
+              </span>
+              <span class="text-xs text-gray-500">{stats.total}</span>
+            </button>
+          <% end %>
+        </div>
+
+        <%= if @areas == [] && !@show_area_form do %>
+          <p class="text-sm text-gray-400 px-3 py-2">No areas yet</p>
+        <% end %>
+
     <!-- Projects Header -->
         <div class="flex items-center justify-between mt-6 mb-2">
           <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Projects</h3>
@@ -474,7 +634,7 @@ defmodule VibetodoWeb.TodoLive do
         
     <!-- New Project Form -->
         <%= if @show_project_form do %>
-          <form phx-submit="create_project" class="mb-2">
+          <form phx-submit="create_project" class="mb-2 space-y-2">
             <input
               type="text"
               name="title"
@@ -484,6 +644,17 @@ defmodule VibetodoWeb.TodoLive do
               class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               autofocus
             />
+            <%= if @areas != [] do %>
+              <select
+                name="area_id"
+                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">No area</option>
+                <%= for area <- @areas do %>
+                  <option value={area.id}>{area.title}</option>
+                <% end %>
+              </select>
+            <% end %>
           </form>
         <% end %>
         
@@ -525,6 +696,8 @@ defmodule VibetodoWeb.TodoLive do
               <%= cond do %>
                 <% @selected_project -> %>
                   {@selected_project.title}
+                <% @selected_area -> %>
+                  {@selected_area.title}
                 <% @view_mode == :next_actions -> %>
                   Next Actions
                 <% @view_mode == :waiting_for -> %>
@@ -692,7 +865,7 @@ defmodule VibetodoWeb.TodoLive do
             <% end %>
           <% else %>
             <ul class="space-y-2">
-              <%= for todo <- filtered_todos(@todos, @selected_project, @view_mode) do %>
+              <%= for todo <- filtered_todos(@todos, @selected_project, @selected_area, @view_mode) do %>
                 <li class="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm group">
                   <button
                     phx-click="toggle_next_action"
@@ -731,7 +904,23 @@ defmodule VibetodoWeb.TodoLive do
                     <% end %>
                   </div>
                   
-    <!-- Project Selector (only show in Inbox) -->
+    <!-- Area Selector (only show when not in area view) -->
+                  <%= if @selected_area == nil && @areas != [] do %>
+                    <select
+                      phx-change="assign_to_area"
+                      phx-value-todo_id={todo.id}
+                      name="area_id"
+                      class="text-xs px-2 py-1 border border-gray-200 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <option value="">No area</option>
+                      <%= for area <- @areas do %>
+                        <option value={area.id} selected={todo.area_id == area.id}>
+                          {area.title}
+                        </option>
+                      <% end %>
+                    </select>
+                  <% end %>
+    <!-- Project Selector (only show when not in project view) -->
                   <%= if @selected_project == nil && @projects != [] do %>
                     <select
                       phx-change="assign_to_project"
@@ -770,11 +959,13 @@ defmodule VibetodoWeb.TodoLive do
               <% end %>
             </ul>
 
-            <%= if filtered_todos(@todos, @selected_project, @view_mode) == [] do %>
+            <%= if filtered_todos(@todos, @selected_project, @selected_area, @view_mode) == [] do %>
               <p class="text-center text-gray-500 mt-8">
                 <%= cond do %>
                   <% @selected_project -> %>
                     No tasks in this project yet.
+                  <% @selected_area -> %>
+                    No tasks in this area yet.
                   <% @view_mode == :next_actions -> %>
                     No next actions. Star items to mark them as next actions!
                   <% @view_mode == :waiting_for -> %>
@@ -788,7 +979,7 @@ defmodule VibetodoWeb.TodoLive do
             <% end %>
 
             <p class="text-xs text-gray-400 mt-6 text-center">
-              <% todos = filtered_todos(@todos, @selected_project, @view_mode) %>
+              <% todos = filtered_todos(@todos, @selected_project, @selected_area, @view_mode) %>
               {length(todos)} item{if length(todos) != 1, do: "s"} · {Enum.count(
                 todos,
                 & &1.completed
