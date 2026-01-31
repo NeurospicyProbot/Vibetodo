@@ -1,107 +1,158 @@
 # Vibetodo Roadmap
 
-## 1. Deploy the Code
-
-### 1.1 Choose Hosting Platform
-- [x] **Fly.io** - Deployed ✓ (Vibetodo-101)
-
-### 1.2 Production Configuration
-- [x] Configure `config/runtime.exs` for production secrets ✓
-- [x] Set up SSL/TLS certificates ✓ (Fly.io handles this)
-- [x] Set up Fly.io persistent volume for SQLite ✓
-- [x] Set `PHX_HOST` and `SECRET_KEY_BASE` environment variables ✓
-
-### 1.3 Database Migration (Future) — Vibetodo-3tf
-- [ ] Switch from SQLite to Postgres when needed (multi-device, redundancy)
-- [ ] Options: Fly Postgres, Supabase, or Neon (all have free tiers)
-
-### 1.4 CI/CD Pipeline — Vibetodo-835
-- [ ] Add GitHub Actions workflow for automated testing
-- [ ] Configure automatic deployment on main branch push
-- [ ] Add health check endpoint
-
-### 1.5 Monitoring & Logging — Vibetodo-4a7
-- [ ] Set up error tracking (Sentry or similar)
-- [ ] Configure log aggregation
-- [ ] Add basic application metrics
+Structured around the 5 GTD Steps: **Capture → Clarify → Organize → Reflect → Engage**
 
 ---
 
-## 2. Getting Things Done (GTD) Features
+## 1. Capture
+*Collect what has your attention*
 
-### 2.1 Inbox - Quick Capture — Vibetodo-3vk
-- [ ] Rename current todo list to "Inbox"
-- [ ] Add keyboard shortcut for rapid capture (Ctrl+Enter)
-- [ ] Support for capturing with minimal friction (title only, process later)
+### Inbox — Vibetodo-3vk
+- [ ] Rename todo list to "Inbox"
+- [ ] Keyboard shortcut for rapid capture (Ctrl+Enter / Cmd+Enter)
+- [ ] Minimal friction: title only, process later
+- [ ] Mobile-friendly quick add
 
-### 2.2 Projects — Vibetodo-mm8
-- [ ] Create Project schema (multi-step outcomes)
+---
+
+## 2. Clarify
+*Process what each item means*
+
+### Processing Workflow — Vibetodo-b2c
+- [ ] "Process" mode to work through inbox items one by one
+- [ ] Decision tree: Is it actionable? → What's the next action? → Is it a project?
+- [ ] Two-minute rule prompt: "Can you do this in 2 minutes?"
+
+### Two-Minute Rule — Vibetodo-ihn
+- [ ] Estimated time field
+- [ ] Filter for quick wins (< 2 minutes)
+- [ ] Visual indicator for quick tasks
+- [ ] "Do it now" prompt during clarify
+
+---
+
+## 3. Organize
+*Put items where they belong*
+
+### Projects — Vibetodo-mm8
+- [ ] Project schema (multi-step outcomes)
 - [ ] Link todos to projects
-- [ ] Project list view with completion progress
-- [ ] "Next action" indicator per project
+- [ ] Project list with completion progress
+- [ ] Next action indicator per project
 
-### 2.3 Contexts — Vibetodo-w0t
-- [ ] Add context tags (@home, @work, @phone, @computer, @errands)
-- [ ] Filter todos by context
+### Contexts (@tags) — Vibetodo-w0t
+- [ ] Context tags (@home, @work, @phone, @computer, @errands)
+- [ ] Filter by context
 - [ ] Custom context creation
-- [ ] Context-based views for focused work
 
-### 2.4 Next Actions — Vibetodo-mjs
-- [ ] Distinguish between "next actions" and other todos
-- [ ] Quick filter for actionable items only
-- [ ] Ensure every project has at least one next action
+### Next Actions — Vibetodo-mjs
+- [ ] Distinguish "next actions" from other todos
+- [ ] Every project needs at least one next action
+- [ ] Quick filter for actionable items
 
-### 2.5 Waiting For — Vibetodo-x0o
+### Waiting For — Vibetodo-x0o
 - [ ] "Waiting For" status for delegated items
 - [ ] Track who/what you're waiting on
 - [ ] Date delegated for follow-up
 
-### 2.6 Someday/Maybe — Vibetodo-n2b
-- [ ] Someday/Maybe list for non-committed items
-- [ ] Move items between Inbox and Someday/Maybe
+### Someday/Maybe — Vibetodo-n2b
+- [ ] Someday/Maybe list for uncommitted items
+- [ ] Move items between Inbox ↔ Someday/Maybe
 - [ ] Periodic review prompts
 
-### 2.7 Reference Material — Vibetodo-a1l
+### Calendar & Tickler — Vibetodo-egp
+- [ ] Due dates with time
+- [ ] Tickler items (hide until date)
+- [ ] Calendar view of scheduled items
+
+### Reference Material — Vibetodo-a1l
 - [ ] Notes field for todos
 - [ ] File/link attachments
 - [ ] Searchable reference archive
 
-### 2.8 Weekly Review — Vibetodo-u5y
+---
+
+## 4. Reflect
+*Review frequently*
+
+### Weekly Review — Vibetodo-u5y
 - [ ] Review dashboard showing all lists
-- [ ] Guided review flow (check projects, clear inbox, review waiting)
+- [ ] Guided review flow:
+  - Clear inbox to zero
+  - Review each project for next actions
+  - Check Waiting For items
+  - Review Someday/Maybe
 - [ ] "Last reviewed" timestamp per project
 - [ ] Stale item warnings
 
-### 2.9 Calendar Integration — Vibetodo-egp
-- [ ] Due dates with time
-- [ ] "Tickler" items (hide until date)
-- [ ] Calendar view of scheduled items
-
-### 2.10 Two-Minute Rule — Vibetodo-ihn
-- [ ] Estimated time field
-- [ ] Filter for quick wins (< 2 minutes)
-- [ ] Visual indicator for quick tasks
+### Daily Review — Vibetodo-e56
+- [ ] Morning planning view
+- [ ] "Today" focus list
+- [ ] End-of-day review prompt
 
 ---
 
-## Priority Order
+## 5. Engage
+*Choose and do*
 
-**Phase 1 - Foundation**
-1. ~~Deploy to Fly.io~~ ✓ (Vibetodo-101)
-2. Add Projects (Vibetodo-mm8)
-3. Add Contexts (Vibetodo-w0t)
+### Context Views — Vibetodo-w0t
+- [ ] "@work" view shows only work tasks
+- [ ] "@home" view shows only home tasks
+- [ ] Location/energy/time-based filtering
 
-**Phase 2 - Core GTD**
-4. Inbox + Next Actions (Vibetodo-3vk, Vibetodo-mjs)
-5. Waiting For list (Vibetodo-x0o)
-6. Someday/Maybe list (Vibetodo-n2b)
+### Focus Mode — Vibetodo-9sh
+- [ ] Single-task view
+- [ ] Timer integration (Pomodoro-style)
+- [ ] "What's next?" suggestion based on context
 
-**Phase 3 - Polish**
-7. Weekly Review feature (Vibetodo-u5y)
-8. Due dates and tickler (Vibetodo-egp)
-9. Reference/notes system (Vibetodo-a1l)
+---
 
-**Phase 4 - Advanced**
-10. Two-minute rule helpers (Vibetodo-ihn)
-11. Calendar integration (Vibetodo-egp)
-12. Mobile-friendly improvements (Vibetodo-2qx)
+## Infrastructure
+
+### Deployment ✓
+- [x] Fly.io deployment (Vibetodo-101)
+- [x] SQLite with persistent volume
+- [x] Production configuration
+
+### CI/CD — Vibetodo-835
+- [ ] GitHub Actions for testing
+- [ ] Auto-deploy on main push
+- [ ] Health check endpoint
+
+### Monitoring — Vibetodo-4a7
+- [ ] Error tracking (Sentry)
+- [ ] Log aggregation
+- [ ] Application metrics
+
+### Database — Vibetodo-3tf
+- [ ] Migrate to PostgreSQL (when needed)
+
+### Mobile — Vibetodo-2qx
+- [ ] Responsive design
+- [ ] PWA support
+- [ ] Touch-friendly UI
+
+---
+
+## Implementation Order
+
+**Phase 1 - Core Loop**
+1. Capture: Inbox (Vibetodo-3vk)
+2. Organize: Projects (Vibetodo-mm8)
+3. Organize: Next Actions (Vibetodo-mjs)
+
+**Phase 2 - Full GTD**
+4. Clarify: Processing Workflow (Vibetodo-b2c)
+5. Organize: Contexts (Vibetodo-w0t)
+6. Organize: Waiting For (Vibetodo-x0o)
+7. Organize: Someday/Maybe (Vibetodo-n2b)
+
+**Phase 3 - Review & Engage**
+8. Reflect: Weekly Review (Vibetodo-u5y)
+9. Engage: Focus Mode (Vibetodo-9sh)
+10. Reflect: Daily Review (Vibetodo-e56)
+
+**Phase 4 - Polish**
+11. Clarify: Two-Minute Rule (Vibetodo-ihn)
+12. Organize: Calendar & Tickler (Vibetodo-egp)
+13. Organize: Reference Material (Vibetodo-a1l)
