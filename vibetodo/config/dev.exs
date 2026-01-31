@@ -84,3 +84,6 @@ config :phoenix_live_view,
   debug_attributes: true,
   # Enable helpful, but potentially expensive runtime checks
   enable_expensive_runtime_checks: true
+
+# Configure Swoosh to use local adapter for development
+config :swoosh, :api_client, false

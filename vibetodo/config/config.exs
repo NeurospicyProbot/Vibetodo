@@ -7,6 +7,19 @@
 # General application configuration
 import Config
 
+config :vibetodo, :scopes,
+  user: [
+    default: true,
+    module: Vibetodo.Accounts.Scope,
+    assign_key: :current_scope,
+    access_path: [:user, :id],
+    schema_key: :user_id,
+    schema_type: :id,
+    schema_table: :users,
+    test_data_fixture: Vibetodo.AccountsFixtures,
+    test_setup_helper: :register_and_log_in_user
+  ]
+
 config :vibetodo,
   ecto_repos: [Vibetodo.Repo],
   generators: [timestamp_type: :utc_datetime]
@@ -50,6 +63,9 @@ config :logger, :default_formatter,
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
+
+# Configures Swoosh for email delivery
+config :vibetodo, Vibetodo.Mailer, adapter: Swoosh.Adapters.Local
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

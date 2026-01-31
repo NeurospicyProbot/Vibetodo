@@ -6,28 +6,34 @@ defmodule Vibetodo.Todos do
   import Ecto.Query, warn: false
   alias Vibetodo.Repo
   alias Vibetodo.Todos.Todo
+  alias Vibetodo.Accounts.User
 
   @doc """
-  Returns the list of todos, ordered by insertion time.
+  Returns the list of todos for the given user, ordered by insertion time.
   """
-  def list_todos do
+  def list_todos(%User{} = user) do
     Todo
+    |> where([t], t.user_id == ^user.id)
     |> order_by(asc: :inserted_at)
     |> Repo.all()
   end
 
   @doc """
-  Gets a single todo.
-  Raises `Ecto.NoResultsError` if the Todo does not exist.
+  Gets a single todo for the given user.
+  Raises `Ecto.NoResultsError` if the Todo does not exist or doesn't belong to user.
   """
-  def get_todo!(id), do: Repo.get!(Todo, id)
+  def get_todo!(%User{} = user, id) do
+    Todo
+    |> where([t], t.user_id == ^user.id)
+    |> Repo.get!(id)
+  end
 
   @doc """
-  Creates a todo.
+  Creates a todo for the given user.
   """
-  def create_todo(attrs \\ %{}) do
+  def create_todo(%User{} = user, attrs \\ %{}) do
     %Todo{}
-    |> Todo.changeset(attrs)
+    |> Todo.changeset(Map.put(attrs, "user_id", user.id))
     |> Repo.insert()
   end
 
@@ -62,21 +68,21 @@ defmodule Vibetodo.Todos do
   end
 
   @doc """
-  Returns all next actions (incomplete todos marked as next action).
+  Returns all next actions for the given user (incomplete todos marked as next action).
   """
-  def list_next_actions do
+  def list_next_actions(%User{} = user) do
     Todo
-    |> where([t], t.is_next_action == true and t.completed == false)
+    |> where([t], t.user_id == ^user.id and t.is_next_action == true and t.completed == false)
     |> order_by(asc: :inserted_at)
     |> Repo.all()
   end
 
   @doc """
-  Returns all waiting for items (incomplete todos with waiting_for set).
+  Returns all waiting for items for the given user (incomplete todos with waiting_for set).
   """
-  def list_waiting_for do
+  def list_waiting_for(%User{} = user) do
     Todo
-    |> where([t], not is_nil(t.waiting_for) and t.completed == false)
+    |> where([t], t.user_id == ^user.id and not is_nil(t.waiting_for) and t.completed == false)
     |> order_by(asc: :delegated_at)
     |> Repo.all()
   end
@@ -96,11 +102,11 @@ defmodule Vibetodo.Todos do
   end
 
   @doc """
-  Returns all someday/maybe items (incomplete todos marked as someday/maybe).
+  Returns all someday/maybe items for the given user (incomplete todos marked as someday/maybe).
   """
-  def list_someday_maybe do
+  def list_someday_maybe(%User{} = user) do
     Todo
-    |> where([t], t.is_someday_maybe == true and t.completed == false)
+    |> where([t], t.user_id == ^user.id and t.is_someday_maybe == true and t.completed == false)
     |> order_by(asc: :inserted_at)
     |> Repo.all()
   end
@@ -113,11 +119,11 @@ defmodule Vibetodo.Todos do
   end
 
   @doc """
-  Returns all today items (todos marked for today).
+  Returns all today items for the given user (todos marked for today).
   """
-  def list_today do
+  def list_today(%User{} = user) do
     Todo
-    |> where([t], t.is_today == true)
+    |> where([t], t.user_id == ^user.id and t.is_today == true)
     |> order_by(asc: :inserted_at)
     |> Repo.all()
   end
@@ -130,11 +136,11 @@ defmodule Vibetodo.Todos do
   end
 
   @doc """
-  Clears completed items from today.
+  Clears completed items from today for the given user.
   """
-  def clear_completed_today do
+  def clear_completed_today(%User{} = user) do
     Todo
-    |> where([t], t.is_today == true and t.completed == true)
+    |> where([t], t.user_id == ^user.id and t.is_today == true and t.completed == true)
     |> Repo.update_all(set: [is_today: false])
   end
 end

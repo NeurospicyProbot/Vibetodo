@@ -7,31 +7,34 @@ defmodule Vibetodo.Areas do
   import Ecto.Query, warn: false
   alias Vibetodo.Repo
   alias Vibetodo.Areas.Area
+  alias Vibetodo.Accounts.User
 
   @doc """
-  Returns the list of all areas.
+  Returns the list of all areas for the given user.
   """
-  def list_areas do
+  def list_areas(%User{} = user) do
     Area
+    |> where([a], a.user_id == ^user.id)
     |> order_by(asc: :inserted_at)
     |> Repo.all()
   end
 
   @doc """
-  Gets a single area with its projects and todos.
+  Gets a single area with its projects and todos for the given user.
   """
-  def get_area!(id) do
+  def get_area!(%User{} = user, id) do
     Area
+    |> where([a], a.user_id == ^user.id)
     |> Repo.get!(id)
     |> Repo.preload([:projects, :todos])
   end
 
   @doc """
-  Creates an area.
+  Creates an area for the given user.
   """
-  def create_area(attrs \\ %{}) do
+  def create_area(%User{} = user, attrs \\ %{}) do
     %Area{}
-    |> Area.changeset(attrs)
+    |> Area.changeset(Map.put(attrs, "user_id", user.id))
     |> Repo.insert()
   end
 

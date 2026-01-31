@@ -9,6 +9,7 @@ defmodule Vibetodo.Projects.Project do
     field :last_reviewed_at, :utc_datetime
 
     belongs_to :area, Vibetodo.Areas.Area
+    belongs_to :user, Vibetodo.Accounts.User
     has_many :todos, Vibetodo.Todos.Todo
 
     timestamps(type: :utc_datetime)
@@ -19,8 +20,8 @@ defmodule Vibetodo.Projects.Project do
   @doc false
   def changeset(project, attrs) do
     project
-    |> cast(attrs, [:title, :status, :notes, :area_id, :last_reviewed_at])
-    |> validate_required([:title])
+    |> cast(attrs, [:title, :status, :notes, :area_id, :user_id, :last_reviewed_at])
+    |> validate_required([:title, :user_id])
     |> validate_inclusion(:status, @statuses)
   end
 end

@@ -7,6 +7,7 @@ defmodule Vibetodo.Areas.Area do
     field :description, :string
     field :last_reviewed_at, :utc_datetime
 
+    belongs_to :user, Vibetodo.Accounts.User
     has_many :projects, Vibetodo.Projects.Project
     has_many :todos, Vibetodo.Todos.Todo
 
@@ -16,7 +17,7 @@ defmodule Vibetodo.Areas.Area do
   @doc false
   def changeset(area, attrs) do
     area
-    |> cast(attrs, [:title, :description, :last_reviewed_at])
-    |> validate_required([:title])
+    |> cast(attrs, [:title, :description, :user_id, :last_reviewed_at])
+    |> validate_required([:title, :user_id])
   end
 end

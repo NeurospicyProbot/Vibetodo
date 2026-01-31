@@ -13,6 +13,7 @@ defmodule Vibetodo.Todos.Todo do
 
     belongs_to :project, Vibetodo.Projects.Project
     belongs_to :area, Vibetodo.Areas.Area
+    belongs_to :user, Vibetodo.Accounts.User
 
     timestamps(type: :utc_datetime)
   end
@@ -25,12 +26,13 @@ defmodule Vibetodo.Todos.Todo do
       :completed,
       :project_id,
       :area_id,
+      :user_id,
       :is_next_action,
       :is_someday_maybe,
       :is_today,
       :waiting_for,
       :delegated_at
     ])
-    |> validate_required([:title])
+    |> validate_required([:title, :user_id])
   end
 end

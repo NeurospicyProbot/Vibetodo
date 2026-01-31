@@ -18,11 +18,13 @@ defmodule VibetodoWeb.TodoLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    user = socket.assigns.current_user
+
     {:ok,
      socket
-     |> assign(:todos, Todos.list_todos())
-     |> assign(:projects, Projects.list_projects())
-     |> assign(:areas, Areas.list_areas())
+     |> assign(:todos, Todos.list_todos(user))
+     |> assign(:projects, Projects.list_projects(user))
+     |> assign(:areas, Areas.list_areas(user))
      |> assign(:new_todo, "")
      |> assign(:new_project, "")
      |> assign(:new_area, "")
@@ -39,21 +41,22 @@ defmodule VibetodoWeb.TodoLive do
 
   @impl true
   def handle_event("add", %{"title" => title}, socket) do
+    user = socket.assigns.current_user
     title = String.trim(title)
 
     if title != "" do
-      attrs = %{title: title}
+      attrs = %{"title" => title}
 
       attrs =
         if socket.assigns.selected_project,
-          do: Map.put(attrs, :project_id, socket.assigns.selected_project.id),
+          do: Map.put(attrs, "project_id", socket.assigns.selected_project.id),
           else: attrs
 
-      case Todos.create_todo(attrs) do
+      case Todos.create_todo(user, attrs) do
         {:ok, _todo} ->
           {:noreply,
            socket
-           |> assign(:todos, Todos.list_todos())
+           |> assign(:todos, Todos.list_todos(user))
            |> assign(:new_todo, "")
            |> maybe_refresh_project()}
 
@@ -67,23 +70,25 @@ defmodule VibetodoWeb.TodoLive do
 
   @impl true
   def handle_event("toggle", %{"id" => id}, socket) do
-    todo = Todos.get_todo!(id)
+    user = socket.assigns.current_user
+    todo = Todos.get_todo!(user, id)
     {:ok, _todo} = Todos.toggle_todo(todo)
 
     {:noreply,
      socket
-     |> assign(:todos, Todos.list_todos())
+     |> assign(:todos, Todos.list_todos(user))
      |> maybe_refresh_project()}
   end
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    todo = Todos.get_todo!(id)
+    user = socket.assigns.current_user
+    todo = Todos.get_todo!(user, id)
     {:ok, _todo} = Todos.delete_todo(todo)
 
     {:noreply,
      socket
-     |> assign(:todos, Todos.list_todos())
+     |> assign(:todos, Todos.list_todos(user))
      |> maybe_refresh_project()}
   end
 
@@ -135,15 +140,16 @@ defmodule VibetodoWeb.TodoLive do
 
   @impl true
   def handle_event("mark_waiting_for", %{"id" => id, "person" => person}, socket) do
+    user = socket.assigns.current_user
     person = String.trim(person)
 
     if person != "" do
-      todo = Todos.get_todo!(id)
+      todo = Todos.get_todo!(user, id)
       {:ok, _} = Todos.mark_waiting_for(todo, person)
 
       {:noreply,
        socket
-       |> assign(:todos, Todos.list_todos())
+       |> assign(:todos, Todos.list_todos(user))
        |> maybe_refresh_project()}
     else
       {:noreply, socket}
@@ -152,12 +158,13 @@ defmodule VibetodoWeb.TodoLive do
 
   @impl true
   def handle_event("clear_waiting_for", %{"id" => id}, socket) do
-    todo = Todos.get_todo!(id)
+    user = socket.assigns.current_user
+    todo = Todos.get_todo!(user, id)
     {:ok, _} = Todos.clear_waiting_for(todo)
 
     {:noreply,
      socket
-     |> assign(:todos, Todos.list_todos())
+     |> assign(:todos, Todos.list_todos(user))
      |> maybe_refresh_project()}
   end
 
@@ -180,57 +187,62 @@ defmodule VibetodoWeb.TodoLive do
 
   @impl true
   def handle_event("process_delete", %{"id" => id}, socket) do
-    todo = Todos.get_todo!(id)
+    user = socket.assigns.current_user
+    todo = Todos.get_todo!(user, id)
     {:ok, _} = Todos.delete_todo(todo)
 
     {:noreply,
      socket
-     |> assign(:todos, Todos.list_todos())
+     |> assign(:todos, Todos.list_todos(user))
      |> advance_processing()}
   end
 
   @impl true
   def handle_event("process_done", %{"id" => id}, socket) do
-    todo = Todos.get_todo!(id)
+    user = socket.assigns.current_user
+    todo = Todos.get_todo!(user, id)
     {:ok, _} = Todos.update_todo(todo, %{completed: true})
 
     {:noreply,
      socket
-     |> assign(:todos, Todos.list_todos())
+     |> assign(:todos, Todos.list_todos(user))
      |> advance_processing()}
   end
 
   @impl true
   def handle_event("process_next_action", %{"id" => id}, socket) do
-    todo = Todos.get_todo!(id)
+    user = socket.assigns.current_user
+    todo = Todos.get_todo!(user, id)
     {:ok, _} = Todos.update_todo(todo, %{is_next_action: true})
 
     {:noreply,
      socket
-     |> assign(:todos, Todos.list_todos())
+     |> assign(:todos, Todos.list_todos(user))
      |> advance_processing()}
   end
 
   @impl true
   def handle_event("process_someday_maybe", %{"id" => id}, socket) do
-    todo = Todos.get_todo!(id)
+    user = socket.assigns.current_user
+    todo = Todos.get_todo!(user, id)
     {:ok, _} = Todos.update_todo(todo, %{is_someday_maybe: true})
 
     {:noreply,
      socket
-     |> assign(:todos, Todos.list_todos())
+     |> assign(:todos, Todos.list_todos(user))
      |> advance_processing()}
   end
 
   @impl true
   def handle_event("process_assign_project", %{"id" => id, "project_id" => project_id}, socket) do
-    todo = Todos.get_todo!(id)
+    user = socket.assigns.current_user
+    todo = Todos.get_todo!(user, id)
     project_id = String.to_integer(project_id)
     {:ok, _} = Todos.update_todo(todo, %{project_id: project_id})
 
     {:noreply,
      socket
-     |> assign(:todos, Todos.list_todos())
+     |> assign(:todos, Todos.list_todos(user))
      |> advance_processing()}
   end
 
@@ -240,16 +252,37 @@ defmodule VibetodoWeb.TodoLive do
   end
 
   @impl true
+  def handle_event("process_convert_to_project", %{"id" => id}, socket) do
+    user = socket.assigns.current_user
+    todo = Todos.get_todo!(user, id)
+
+    case Projects.create_project(user, %{"title" => todo.title}) do
+      {:ok, _project} ->
+        {:ok, _} = Todos.delete_todo(todo)
+
+        {:noreply,
+         socket
+         |> assign(:todos, Todos.list_todos(user))
+         |> assign(:projects, Projects.list_projects(user))
+         |> advance_processing()}
+
+      {:error, _changeset} ->
+        {:noreply, socket}
+    end
+  end
+
+  @impl true
   def handle_event("process_waiting_for", %{"todo_id" => id, "person" => person}, socket) do
+    user = socket.assigns.current_user
     person = String.trim(person)
 
     if person != "" do
-      todo = Todos.get_todo!(id)
+      todo = Todos.get_todo!(user, id)
       {:ok, _} = Todos.mark_waiting_for(todo, person)
 
       {:noreply,
        socket
-       |> assign(:todos, Todos.list_todos())
+       |> assign(:todos, Todos.list_todos(user))
        |> advance_processing()}
     else
       {:noreply, socket}
@@ -295,12 +328,13 @@ defmodule VibetodoWeb.TodoLive do
 
   @impl true
   def handle_event("review_mark_project", %{"id" => id}, socket) do
-    project = Projects.get_project!(id)
+    user = socket.assigns.current_user
+    project = Projects.get_project!(user, id)
     {:ok, _} = Projects.mark_reviewed(project)
 
     {:noreply,
      socket
-     |> assign(:projects, Projects.list_projects())
+     |> assign(:projects, Projects.list_projects(user))
      |> advance_review_project()}
   end
 
@@ -311,12 +345,13 @@ defmodule VibetodoWeb.TodoLive do
 
   @impl true
   def handle_event("review_mark_area", %{"id" => id}, socket) do
-    area = Areas.get_area!(id)
+    user = socket.assigns.current_user
+    area = Areas.get_area!(user, id)
     {:ok, _} = Areas.mark_reviewed(area)
 
     {:noreply,
      socket
-     |> assign(:areas, Areas.list_areas())
+     |> assign(:areas, Areas.list_areas(user))
      |> advance_review_area()}
   end
 
@@ -327,23 +362,25 @@ defmodule VibetodoWeb.TodoLive do
 
   @impl true
   def handle_event("toggle_next_action", %{"id" => id}, socket) do
-    todo = Todos.get_todo!(id)
+    user = socket.assigns.current_user
+    todo = Todos.get_todo!(user, id)
     {:ok, _todo} = Todos.toggle_next_action(todo)
 
     {:noreply,
      socket
-     |> assign(:todos, Todos.list_todos())
+     |> assign(:todos, Todos.list_todos(user))
      |> maybe_refresh_project()}
   end
 
   @impl true
   def handle_event("toggle_today", %{"id" => id}, socket) do
-    todo = Todos.get_todo!(id)
+    user = socket.assigns.current_user
+    todo = Todos.get_todo!(user, id)
     {:ok, _todo} = Todos.toggle_today(todo)
 
     {:noreply,
      socket
-     |> assign(:todos, Todos.list_todos())
+     |> assign(:todos, Todos.list_todos(user))
      |> maybe_refresh_project()}
   end
 
@@ -358,16 +395,18 @@ defmodule VibetodoWeb.TodoLive do
 
   @impl true
   def handle_event("clear_completed_today", _, socket) do
-    Todos.clear_completed_today()
+    user = socket.assigns.current_user
+    Todos.clear_completed_today(user)
 
     {:noreply,
      socket
-     |> assign(:todos, Todos.list_todos())}
+     |> assign(:todos, Todos.list_todos(user))}
   end
 
   @impl true
   def handle_event("select_project", %{"id" => id}, socket) do
-    project = Projects.get_project!(id)
+    user = socket.assigns.current_user
+    project = Projects.get_project!(user, id)
 
     {:noreply,
      socket
@@ -388,6 +427,7 @@ defmodule VibetodoWeb.TodoLive do
 
   @impl true
   def handle_event("create_project", params, socket) do
+    user = socket.assigns.current_user
     title = String.trim(params["title"] || "")
 
     area_id =
@@ -398,14 +438,14 @@ defmodule VibetodoWeb.TodoLive do
       end
 
     if title != "" do
-      attrs = %{title: title}
-      attrs = if area_id, do: Map.put(attrs, :area_id, area_id), else: attrs
+      attrs = %{"title" => title}
+      attrs = if area_id, do: Map.put(attrs, "area_id", area_id), else: attrs
 
-      case Projects.create_project(attrs) do
+      case Projects.create_project(user, attrs) do
         {:ok, _project} ->
           {:noreply,
            socket
-           |> assign(:projects, Projects.list_projects())
+           |> assign(:projects, Projects.list_projects(user))
            |> assign(:new_project, "")
            |> assign(:show_project_form, false)}
 
@@ -424,7 +464,8 @@ defmodule VibetodoWeb.TodoLive do
 
   @impl true
   def handle_event("select_area", %{"id" => id}, socket) do
-    area = Areas.get_area!(id)
+    user = socket.assigns.current_user
+    area = Areas.get_area!(user, id)
 
     {:noreply,
      socket
@@ -445,14 +486,15 @@ defmodule VibetodoWeb.TodoLive do
 
   @impl true
   def handle_event("create_area", %{"title" => title}, socket) do
+    user = socket.assigns.current_user
     title = String.trim(title)
 
     if title != "" do
-      case Areas.create_area(%{title: title}) do
+      case Areas.create_area(user, %{"title" => title}) do
         {:ok, _area} ->
           {:noreply,
            socket
-           |> assign(:areas, Areas.list_areas())
+           |> assign(:areas, Areas.list_areas(user))
            |> assign(:new_area, "")
            |> assign(:show_area_form, false)}
 
@@ -475,13 +517,14 @@ defmodule VibetodoWeb.TodoLive do
         %{"todo_id" => todo_id, "project_id" => project_id},
         socket
       ) do
-    todo = Todos.get_todo!(todo_id)
+    user = socket.assigns.current_user
+    todo = Todos.get_todo!(user, todo_id)
     project_id = if project_id == "", do: nil, else: String.to_integer(project_id)
     {:ok, _todo} = Todos.update_todo(todo, %{project_id: project_id})
 
     {:noreply,
      socket
-     |> assign(:todos, Todos.list_todos())
+     |> assign(:todos, Todos.list_todos(user))
      |> maybe_refresh_project()}
   end
 
@@ -491,27 +534,36 @@ defmodule VibetodoWeb.TodoLive do
         %{"todo_id" => todo_id, "area_id" => area_id},
         socket
       ) do
-    todo = Todos.get_todo!(todo_id)
+    user = socket.assigns.current_user
+    todo = Todos.get_todo!(user, todo_id)
     area_id = if area_id == "", do: nil, else: String.to_integer(area_id)
     {:ok, _todo} = Todos.update_todo(todo, %{area_id: area_id})
 
     {:noreply,
      socket
-     |> assign(:todos, Todos.list_todos())
+     |> assign(:todos, Todos.list_todos(user))
      |> maybe_refresh_area()}
   end
 
   defp maybe_refresh_project(socket) do
+    user = socket.assigns.current_user
+
     if socket.assigns.selected_project do
-      assign(socket, :selected_project, Projects.get_project!(socket.assigns.selected_project.id))
+      assign(
+        socket,
+        :selected_project,
+        Projects.get_project!(user, socket.assigns.selected_project.id)
+      )
     else
       socket
     end
   end
 
   defp maybe_refresh_area(socket) do
+    user = socket.assigns.current_user
+
     if socket.assigns.selected_area do
-      assign(socket, :selected_area, Areas.get_area!(socket.assigns.selected_area.id))
+      assign(socket, :selected_area, Areas.get_area!(user, socket.assigns.selected_area.id))
     else
       socket
     end
@@ -579,14 +631,22 @@ defmodule VibetodoWeb.TodoLive do
     end
   end
 
-  defp get_inbox_items(todos), do: Enum.filter(todos, &is_nil(&1.project_id))
+  defp get_inbox_items(todos) do
+    Enum.filter(todos, fn todo ->
+      is_nil(todo.project_id) &&
+        !todo.is_next_action &&
+        !todo.is_someday_maybe &&
+        !todo.waiting_for &&
+        !todo.completed
+    end)
+  end
 
   defp current_processing_item(todos, index) do
     inbox_items = get_inbox_items(todos)
     Enum.at(inbox_items, index)
   end
 
-  defp filtered_todos(todos, nil, nil, :inbox), do: Enum.filter(todos, &is_nil(&1.project_id))
+  defp filtered_todos(todos, nil, nil, :inbox), do: get_inbox_items(todos)
 
   defp filtered_todos(todos, nil, nil, :next_actions),
     do: Enum.filter(todos, &(&1.is_next_action && !&1.completed))
@@ -612,7 +672,7 @@ defmodule VibetodoWeb.TodoLive do
 
   defp someday_maybe_count(todos), do: Enum.count(todos, &(&1.is_someday_maybe && !&1.completed))
 
-  defp inbox_count(todos), do: Enum.count(todos, &is_nil(&1.project_id))
+  defp inbox_count(todos), do: length(get_inbox_items(todos))
 
   defp today_count(todos), do: Enum.count(todos, &(&1.is_today && !&1.completed))
 
@@ -786,7 +846,7 @@ defmodule VibetodoWeb.TodoLive do
               value={@new_area}
               phx-change="update_area_input"
               placeholder="Area name..."
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
               autofocus
             />
           </form>
@@ -852,7 +912,7 @@ defmodule VibetodoWeb.TodoLive do
               value={@new_project}
               phx-change="update_project_input"
               placeholder="Project name..."
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               autofocus
             />
             <%= if @areas != [] do %>
@@ -1043,7 +1103,7 @@ defmodule VibetodoWeb.TodoLive do
                         type="text"
                         name="person"
                         placeholder="Waiting for who?"
-                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white text-gray-900"
                       />
                       <button
                         type="submit"
@@ -1052,6 +1112,20 @@ defmodule VibetodoWeb.TodoLive do
                         Delegate
                       </button>
                     </form>
+                  </div>
+                  
+    <!-- Convert to Project -->
+                  <div class="border-t pt-4 mb-4">
+                    <button
+                      phx-click="process_convert_to_project"
+                      phx-value-id={current_item.id}
+                      class="w-full px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors text-sm font-medium border border-emerald-200"
+                    >
+                      Convert to Project
+                    </button>
+                    <p class="text-xs text-gray-400 mt-1 text-center">
+                      Multi-step outcome? Make it a project.
+                    </p>
                   </div>
 
                   <%= if @projects != [] do %>

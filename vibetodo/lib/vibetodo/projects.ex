@@ -6,41 +6,44 @@ defmodule Vibetodo.Projects do
   import Ecto.Query, warn: false
   alias Vibetodo.Repo
   alias Vibetodo.Projects.Project
+  alias Vibetodo.Accounts.User
 
   @doc """
-  Returns the list of active projects.
+  Returns the list of active projects for the given user.
   """
-  def list_projects do
+  def list_projects(%User{} = user) do
     Project
-    |> where([p], p.status == "active")
+    |> where([p], p.user_id == ^user.id and p.status == "active")
     |> order_by(asc: :inserted_at)
     |> Repo.all()
   end
 
   @doc """
-  Returns all projects including completed ones.
+  Returns all projects for the given user including completed ones.
   """
-  def list_all_projects do
+  def list_all_projects(%User{} = user) do
     Project
+    |> where([p], p.user_id == ^user.id)
     |> order_by(asc: :inserted_at)
     |> Repo.all()
   end
 
   @doc """
-  Gets a single project with its todos.
+  Gets a single project with its todos for the given user.
   """
-  def get_project!(id) do
+  def get_project!(%User{} = user, id) do
     Project
+    |> where([p], p.user_id == ^user.id)
     |> Repo.get!(id)
     |> Repo.preload(:todos)
   end
 
   @doc """
-  Creates a project.
+  Creates a project for the given user.
   """
-  def create_project(attrs \\ %{}) do
+  def create_project(%User{} = user, attrs \\ %{}) do
     %Project{}
-    |> Project.changeset(attrs)
+    |> Project.changeset(Map.put(attrs, "user_id", user.id))
     |> Repo.insert()
   end
 
