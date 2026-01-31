@@ -111,4 +111,30 @@ defmodule Vibetodo.Todos do
   def toggle_someday_maybe(%Todo{} = todo) do
     update_todo(todo, %{is_someday_maybe: !todo.is_someday_maybe})
   end
+
+  @doc """
+  Returns all today items (todos marked for today).
+  """
+  def list_today do
+    Todo
+    |> where([t], t.is_today == true)
+    |> order_by(asc: :inserted_at)
+    |> Repo.all()
+  end
+
+  @doc """
+  Toggles the today status of a todo.
+  """
+  def toggle_today(%Todo{} = todo) do
+    update_todo(todo, %{is_today: !todo.is_today})
+  end
+
+  @doc """
+  Clears completed items from today.
+  """
+  def clear_completed_today do
+    Todo
+    |> where([t], t.is_today == true and t.completed == true)
+    |> Repo.update_all(set: [is_today: false])
+  end
 end

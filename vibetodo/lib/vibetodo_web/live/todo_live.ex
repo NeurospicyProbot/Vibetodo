@@ -328,6 +328,35 @@ defmodule VibetodoWeb.TodoLive do
   end
 
   @impl true
+  def handle_event("toggle_today", %{"id" => id}, socket) do
+    todo = Todos.get_todo!(id)
+    {:ok, _todo} = Todos.toggle_today(todo)
+
+    {:noreply,
+     socket
+     |> assign(:todos, Todos.list_todos())
+     |> maybe_refresh_project()}
+  end
+
+  @impl true
+  def handle_event("select_today", _, socket) do
+    {:noreply,
+     socket
+     |> assign(:selected_project, nil)
+     |> assign(:selected_area, nil)
+     |> assign(:view_mode, :today)}
+  end
+
+  @impl true
+  def handle_event("clear_completed_today", _, socket) do
+    Todos.clear_completed_today()
+
+    {:noreply,
+     socket
+     |> assign(:todos, Todos.list_todos())}
+  end
+
+  @impl true
   def handle_event("select_project", %{"id" => id}, socket) do
     project = Projects.get_project!(id)
 
@@ -557,6 +586,9 @@ defmodule VibetodoWeb.TodoLive do
   defp filtered_todos(todos, nil, nil, :someday_maybe),
     do: Enum.filter(todos, &(&1.is_someday_maybe && !&1.completed))
 
+  defp filtered_todos(todos, nil, nil, :today),
+    do: Enum.filter(todos, & &1.is_today)
+
   defp filtered_todos(_todos, project, _area, :project), do: project.todos
 
   defp filtered_todos(_todos, _project, area, :area), do: area.todos
@@ -570,6 +602,8 @@ defmodule VibetodoWeb.TodoLive do
   defp someday_maybe_count(todos), do: Enum.count(todos, &(&1.is_someday_maybe && !&1.completed))
 
   defp inbox_count(todos), do: Enum.count(todos, &is_nil(&1.project_id))
+
+  defp today_count(todos), do: Enum.count(todos, &(&1.is_today && !&1.completed))
 
   @impl true
   def render(assigns) do
@@ -605,7 +639,26 @@ defmodule VibetodoWeb.TodoLive do
           </span>
           <span class="text-sm text-gray-500">{inbox_count(@todos)}</span>
         </button>
-        
+
+    <!-- Today -->
+        <button
+          phx-click="select_today"
+          class={"w-full text-left px-3 py-2 rounded-lg mb-1 flex items-center justify-between #{if @view_mode == :today, do: "bg-orange-100 text-orange-700", else: "hover:bg-gray-100 text-gray-700"}"}
+        >
+          <span class="flex items-center gap-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+            </svg>
+            Today
+          </span>
+          <span class="text-sm text-gray-500">{today_count(@todos)}</span>
+        </button>
+
     <!-- Next Actions -->
         <button
           phx-click="select_next_actions"
@@ -835,6 +888,8 @@ defmodule VibetodoWeb.TodoLive do
               <%= cond do %>
                 <% @view_mode == :weekly_review -> %>
                   Weekly Review
+                <% @view_mode == :today -> %>
+                  Today
                 <% @selected_project -> %>
                   {@selected_project.title}
                 <% @selected_area -> %>
@@ -866,6 +921,14 @@ defmodule VibetodoWeb.TodoLive do
                   class="px-3 py-1 text-sm bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors"
                 >
                   Exit
+                </button>
+              <% end %>
+              <%= if @view_mode == :today && Enum.any?(@todos, &(&1.is_today && &1.completed)) do %>
+                <button
+                  phx-click="clear_completed_today"
+                  class="px-3 py-1 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                >
+                  Clear Done
                 </button>
               <% end %>
               <span class="text-xs text-gray-400">Press / to capture</span>
@@ -1287,6 +1350,21 @@ defmodule VibetodoWeb.TodoLive do
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
                   </button>
+                  <button
+                    phx-click="toggle_today"
+                    phx-value-id={todo.id}
+                    class={"flex-shrink-0 #{if todo.is_today, do: "text-orange-500", else: "text-gray-300 hover:text-orange-400"}"}
+                    title={if todo.is_today, do: "Remove from Today", else: "Add to Today"}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                    </svg>
+                  </button>
                   <input
                     type="checkbox"
                     checked={todo.completed}
@@ -1373,6 +1451,8 @@ defmodule VibetodoWeb.TodoLive do
                     Nothing in Waiting For. Use the clock icon to delegate items.
                   <% @view_mode == :someday_maybe -> %>
                     No someday/maybe items. Park ideas here during processing!
+                  <% @view_mode == :today -> %>
+                    No items for today. Click the sun icon on any task to add it!
                   <% true -> %>
                     Your inbox is empty. Capture what's on your mind!
                 <% end %>

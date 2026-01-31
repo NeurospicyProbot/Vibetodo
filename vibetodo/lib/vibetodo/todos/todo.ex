@@ -7,6 +7,7 @@ defmodule Vibetodo.Todos.Todo do
     field :completed, :boolean, default: false
     field :is_next_action, :boolean, default: false
     field :is_someday_maybe, :boolean, default: false
+    field :is_today, :boolean, default: false
     field :waiting_for, :string
     field :delegated_at, :utc_datetime
 
@@ -26,6 +27,7 @@ defmodule Vibetodo.Todos.Todo do
       :area_id,
       :is_next_action,
       :is_someday_maybe,
+      :is_today,
       :waiting_for,
       :delegated_at
     ])
