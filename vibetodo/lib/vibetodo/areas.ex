@@ -66,4 +66,11 @@ defmodule Vibetodo.Areas do
       total: active_projects + active_todos
     }
   end
+
+  @doc """
+  Marks an area as reviewed (updates last_reviewed_at).
+  """
+  def mark_reviewed(%Area{} = area) do
+    update_area(area, %{last_reviewed_at: DateTime.utc_now()})
+  end
 end

@@ -5,6 +5,8 @@ defmodule VibetodoWeb.TodoLive do
   alias Vibetodo.Projects
   alias Vibetodo.Areas
 
+  @review_steps [:inbox_zero, :next_actions, :waiting_for, :projects, :areas, :someday_maybe, :capture, :complete]
+
   @impl true
   def mount(_params, _session, socket) do
     {:ok,
@@ -20,7 +22,10 @@ defmodule VibetodoWeb.TodoLive do
      |> assign(:show_project_form, false)
      |> assign(:show_area_form, false)
      |> assign(:view_mode, :inbox)
-     |> assign(:processing_index, 0)}
+     |> assign(:processing_index, 0)
+     |> assign(:review_step, 0)
+     |> assign(:review_project_index, 0)
+     |> assign(:review_area_index, 0)}
   end
 
   @impl true
@@ -242,6 +247,75 @@ defmodule VibetodoWeb.TodoLive do
     end
   end
 
+  # Weekly Review handlers
+  @impl true
+  def handle_event("start_weekly_review", _, socket) do
+    {:noreply,
+     socket
+     |> assign(:selected_project, nil)
+     |> assign(:selected_area, nil)
+     |> assign(:view_mode, :weekly_review)
+     |> assign(:review_step, 0)
+     |> assign(:review_project_index, 0)
+     |> assign(:review_area_index, 0)}
+  end
+
+  @impl true
+  def handle_event("review_next_step", _, socket) do
+    {:noreply, advance_review_step(socket)}
+  end
+
+  @impl true
+  def handle_event("review_prev_step", _, socket) do
+    new_step = max(0, socket.assigns.review_step - 1)
+    {:noreply, assign(socket, :review_step, new_step)}
+  end
+
+  @impl true
+  def handle_event("review_skip_step", _, socket) do
+    {:noreply, advance_review_step(socket)}
+  end
+
+  @impl true
+  def handle_event("exit_weekly_review", _, socket) do
+    {:noreply,
+     socket
+     |> assign(:view_mode, :inbox)
+     |> assign(:review_step, 0)}
+  end
+
+  @impl true
+  def handle_event("review_mark_project", %{"id" => id}, socket) do
+    project = Projects.get_project!(id)
+    {:ok, _} = Projects.mark_reviewed(project)
+
+    {:noreply,
+     socket
+     |> assign(:projects, Projects.list_projects())
+     |> advance_review_project()}
+  end
+
+  @impl true
+  def handle_event("review_skip_project", _, socket) do
+    {:noreply, advance_review_project(socket)}
+  end
+
+  @impl true
+  def handle_event("review_mark_area", %{"id" => id}, socket) do
+    area = Areas.get_area!(id)
+    {:ok, _} = Areas.mark_reviewed(area)
+
+    {:noreply,
+     socket
+     |> assign(:areas, Areas.list_areas())
+     |> advance_review_area()}
+  end
+
+  @impl true
+  def handle_event("review_skip_area", _, socket) do
+    {:noreply, advance_review_area(socket)}
+  end
+
   @impl true
   def handle_event("toggle_next_action", %{"id" => id}, socket) do
     todo = Todos.get_todo!(id)
@@ -416,6 +490,55 @@ defmodule VibetodoWeb.TodoLive do
     end
   end
 
+  defp advance_review_step(socket) do
+    max_step = length(@review_steps) - 1
+    new_step = min(socket.assigns.review_step + 1, max_step)
+    assign(socket, :review_step, new_step)
+  end
+
+  defp advance_review_project(socket) do
+    projects = socket.assigns.projects
+    new_index = socket.assigns.review_project_index + 1
+
+    if new_index >= length(projects) do
+      # All projects reviewed, move to next step
+      advance_review_step(socket)
+      |> assign(:review_project_index, 0)
+    else
+      assign(socket, :review_project_index, new_index)
+    end
+  end
+
+  defp advance_review_area(socket) do
+    areas = socket.assigns.areas
+    new_index = socket.assigns.review_area_index + 1
+
+    if new_index >= length(areas) do
+      # All areas reviewed, move to next step
+      advance_review_step(socket)
+      |> assign(:review_area_index, 0)
+    else
+      assign(socket, :review_area_index, new_index)
+    end
+  end
+
+  defp current_review_step(step_index) do
+    Enum.at(@review_steps, step_index, :complete)
+  end
+
+  defp review_step_name(step) do
+    case step do
+      :inbox_zero -> "Inbox Zero"
+      :next_actions -> "Next Actions"
+      :waiting_for -> "Waiting For"
+      :projects -> "Projects"
+      :areas -> "Areas of Focus"
+      :someday_maybe -> "Someday/Maybe"
+      :capture -> "Capture New"
+      :complete -> "Complete"
+    end
+  end
+
   defp get_inbox_items(todos), do: Enum.filter(todos, &is_nil(&1.project_id))
 
   defp current_processing_item(todos, index) do
@@ -543,7 +666,23 @@ defmodule VibetodoWeb.TodoLive do
           </span>
           <span class="text-sm text-gray-500">{someday_maybe_count(@todos)}</span>
         </button>
-        
+
+    <!-- Weekly Review -->
+        <button
+          phx-click="start_weekly_review"
+          class={"w-full text-left px-3 py-2 rounded-lg mt-4 mb-2 flex items-center gap-2 #{if @view_mode == :weekly_review, do: "bg-indigo-100 text-indigo-700", else: "bg-indigo-50 hover:bg-indigo-100 text-indigo-600"}"}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+          </svg>
+          Weekly Review
+        </button>
+
     <!-- Areas of Focus Header -->
         <div class="flex items-center justify-between mt-6 mb-2">
           <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Areas</h3>
@@ -694,6 +833,8 @@ defmodule VibetodoWeb.TodoLive do
           <div class="flex items-center justify-between mb-6">
             <h1 class="text-2xl font-bold text-gray-800">
               <%= cond do %>
+                <% @view_mode == :weekly_review -> %>
+                  Weekly Review
                 <% @selected_project -> %>
                   {@selected_project.title}
                 <% @selected_area -> %>
@@ -863,7 +1004,267 @@ defmodule VibetodoWeb.TodoLive do
                 </button>
               </div>
             <% end %>
-          <% else %>
+          <% end %>
+
+          <%= if @view_mode == :weekly_review do %>
+            <% step = current_review_step(@review_step) %>
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+              <!-- Step indicator -->
+              <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-2">
+                  <%= for {s, i} <- Enum.with_index(@review_steps) do %>
+                    <div class={"w-3 h-3 rounded-full #{if i == @review_step, do: "bg-indigo-500", else: if(i < @review_step, do: "bg-indigo-200", else: "bg-gray-200")}"} />
+                  <% end %>
+                </div>
+                <span class="text-sm text-gray-500">Step {@review_step + 1} of {length(@review_steps)}</span>
+              </div>
+
+              <h2 class="text-xl font-semibold text-gray-800 mb-4 text-center">{review_step_name(step)}</h2>
+
+              <!-- Step content -->
+              <%= case step do %>
+                <% :inbox_zero -> %>
+                  <div class="text-center">
+                    <% inbox = inbox_count(@todos) %>
+                    <%= if inbox > 0 do %>
+                      <p class="text-gray-600 mb-4">You have <span class="font-bold text-indigo-600">{inbox}</span> items in your inbox.</p>
+                      <button
+                        phx-click="start_processing"
+                        class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors mb-4"
+                      >
+                        Process Inbox First
+                      </button>
+                      <p class="text-sm text-gray-400">Or skip to continue the review</p>
+                    <% else %>
+                      <div class="text-5xl mb-4">✅</div>
+                      <p class="text-gray-600">Your inbox is empty. Great job!</p>
+                    <% end %>
+                  </div>
+
+                <% :next_actions -> %>
+                  <div>
+                    <% next_actions = Enum.filter(@todos, &(&1.is_next_action && !&1.completed)) %>
+                    <%= if next_actions == [] do %>
+                      <p class="text-center text-gray-500">No next actions defined.</p>
+                    <% else %>
+                      <p class="text-gray-600 mb-4 text-center">Review your next actions. Are they still relevant?</p>
+                      <ul class="space-y-2">
+                        <%= for todo <- next_actions do %>
+                          <li class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                            <input
+                              type="checkbox"
+                              checked={todo.completed}
+                              phx-click="toggle"
+                              phx-value-id={todo.id}
+                              class="w-5 h-5 text-blue-500 rounded"
+                            />
+                            <span class="flex-1">{todo.title}</span>
+                            <button
+                              phx-click="toggle_next_action"
+                              phx-value-id={todo.id}
+                              class="text-xs text-gray-400 hover:text-red-500"
+                            >
+                              Remove
+                            </button>
+                          </li>
+                        <% end %>
+                      </ul>
+                    <% end %>
+                  </div>
+
+                <% :waiting_for -> %>
+                  <div>
+                    <% waiting = Enum.filter(@todos, &(&1.waiting_for && !&1.completed)) %>
+                    <%= if waiting == [] do %>
+                      <p class="text-center text-gray-500">Nothing in Waiting For.</p>
+                    <% else %>
+                      <p class="text-gray-600 mb-4 text-center">Check on delegated items. Need to follow up?</p>
+                      <ul class="space-y-2">
+                        <%= for todo <- waiting do %>
+                          <li class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                            <span class="flex-1">{todo.title}</span>
+                            <span class="text-xs text-cyan-600 bg-cyan-50 px-2 py-1 rounded">{todo.waiting_for}</span>
+                            <button
+                              phx-click="clear_waiting_for"
+                              phx-value-id={todo.id}
+                              class="text-xs text-gray-400 hover:text-green-500"
+                            >
+                              Done
+                            </button>
+                          </li>
+                        <% end %>
+                      </ul>
+                    <% end %>
+                  </div>
+
+                <% :projects -> %>
+                  <div>
+                    <%= if @projects == [] do %>
+                      <p class="text-center text-gray-500">No active projects.</p>
+                    <% else %>
+                      <% project = Enum.at(@projects, @review_project_index) %>
+                      <%= if project do %>
+                        <% stats = Projects.get_project_stats(project) %>
+                        <div class="text-center mb-4">
+                          <p class="text-xs text-gray-400">Project {@review_project_index + 1} of {length(@projects)}</p>
+                          <h3 class="text-lg font-medium text-gray-800">{project.title}</h3>
+                          <p class="text-sm text-gray-500">{stats.completed}/{stats.total} completed</p>
+                        </div>
+                        <ul class="space-y-2 mb-4 max-h-48 overflow-auto">
+                          <%= for todo <- project.todos do %>
+                            <li class="flex items-center gap-2 p-2 bg-gray-50 rounded text-sm">
+                              <input type="checkbox" checked={todo.completed} phx-click="toggle" phx-value-id={todo.id} class="w-4 h-4" />
+                              <span class={if todo.completed, do: "line-through text-gray-400"}>{todo.title}</span>
+                            </li>
+                          <% end %>
+                        </ul>
+                        <p class="text-sm text-gray-500 text-center mb-4">Does this project have a clear next action?</p>
+                        <div class="flex gap-2 justify-center">
+                          <button
+                            phx-click="review_mark_project"
+                            phx-value-id={project.id}
+                            class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                          >
+                            Reviewed ✓
+                          </button>
+                          <button
+                            phx-click="review_skip_project"
+                            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                          >
+                            Skip
+                          </button>
+                        </div>
+                      <% end %>
+                    <% end %>
+                  </div>
+
+                <% :areas -> %>
+                  <div>
+                    <%= if @areas == [] do %>
+                      <p class="text-center text-gray-500">No areas defined.</p>
+                    <% else %>
+                      <% area = Enum.at(@areas, @review_area_index) %>
+                      <%= if area do %>
+                        <% stats = Areas.get_area_stats(area) %>
+                        <div class="text-center mb-4">
+                          <p class="text-xs text-gray-400">Area {@review_area_index + 1} of {length(@areas)}</p>
+                          <h3 class="text-lg font-medium text-gray-800">{area.title}</h3>
+                          <p class="text-sm text-gray-500">{stats.active_projects} projects, {stats.active_todos} todos</p>
+                        </div>
+                        <p class="text-sm text-gray-500 text-center mb-4">Are you giving this area enough attention?</p>
+                        <div class="flex gap-2 justify-center">
+                          <button
+                            phx-click="review_mark_area"
+                            phx-value-id={area.id}
+                            class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                          >
+                            Reviewed ✓
+                          </button>
+                          <button
+                            phx-click="review_skip_area"
+                            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                          >
+                            Skip
+                          </button>
+                        </div>
+                      <% end %>
+                    <% end %>
+                  </div>
+
+                <% :someday_maybe -> %>
+                  <div>
+                    <% someday = Enum.filter(@todos, &(&1.is_someday_maybe && !&1.completed)) %>
+                    <%= if someday == [] do %>
+                      <p class="text-center text-gray-500">No someday/maybe items.</p>
+                    <% else %>
+                      <p class="text-gray-600 mb-4 text-center">Any of these ready to activate?</p>
+                      <ul class="space-y-2">
+                        <%= for todo <- someday do %>
+                          <li class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                            <span class="flex-1">{todo.title}</span>
+                            <button
+                              phx-click="toggle_someday_maybe"
+                              phx-value-id={todo.id}
+                              class="text-xs text-indigo-500 hover:text-indigo-700"
+                            >
+                              Activate
+                            </button>
+                            <button
+                              phx-click="delete"
+                              phx-value-id={todo.id}
+                              class="text-xs text-red-400 hover:text-red-600"
+                            >
+                              Delete
+                            </button>
+                          </li>
+                        <% end %>
+                      </ul>
+                    <% end %>
+                  </div>
+
+                <% :capture -> %>
+                  <div class="text-center">
+                    <p class="text-gray-600 mb-4">Anything new come up during the review?</p>
+                    <form phx-submit="add" class="flex gap-2 max-w-md mx-auto">
+                      <input
+                        type="text"
+                        name="title"
+                        value={@new_todo}
+                        phx-change="update_input"
+                        placeholder="Capture new thoughts..."
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                      <button
+                        type="submit"
+                        class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
+                      >
+                        Add
+                      </button>
+                    </form>
+                  </div>
+
+                <% :complete -> %>
+                  <div class="text-center py-8">
+                    <div class="text-5xl mb-4">🎉</div>
+                    <h3 class="text-xl font-medium text-gray-800 mb-2">Review Complete!</h3>
+                    <p class="text-gray-600 mb-6">You've reviewed all your lists and areas.</p>
+                    <button
+                      phx-click="exit_weekly_review"
+                      class="px-6 py-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
+                    >
+                      Finish Review
+                    </button>
+                  </div>
+              <% end %>
+
+              <!-- Navigation -->
+              <%= if step != :complete do %>
+                <div class="flex justify-between mt-8 pt-4 border-t">
+                  <button
+                    phx-click="review_prev_step"
+                    class={"px-4 py-2 rounded-lg #{if @review_step == 0, do: "text-gray-300 cursor-not-allowed", else: "text-gray-600 hover:bg-gray-100"}"}
+                    disabled={@review_step == 0}
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    phx-click="exit_weekly_review"
+                    class="px-4 py-2 text-gray-400 hover:text-gray-600"
+                  >
+                    Exit
+                  </button>
+                  <button
+                    phx-click="review_next_step"
+                    class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
+                  >
+                    Next →
+                  </button>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+
+          <%= if @view_mode not in [:processing, :weekly_review] do %>
             <ul class="space-y-2">
               <%= for todo <- filtered_todos(@todos, @selected_project, @selected_area, @view_mode) do %>
                 <li class="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm group">

@@ -74,4 +74,11 @@ defmodule Vibetodo.Projects do
       percentage: if(total > 0, do: round(completed / total * 100), else: 0)
     }
   end
+
+  @doc """
+  Marks a project as reviewed (updates last_reviewed_at).
+  """
+  def mark_reviewed(%Project{} = project) do
+    update_project(project, %{last_reviewed_at: DateTime.utc_now()})
+  end
 end

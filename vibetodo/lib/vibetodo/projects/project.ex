@@ -6,6 +6,7 @@ defmodule Vibetodo.Projects.Project do
     field :title, :string
     field :status, :string, default: "active"
     field :notes, :string
+    field :last_reviewed_at, :utc_datetime
 
     belongs_to :area, Vibetodo.Areas.Area
     has_many :todos, Vibetodo.Todos.Todo
@@ -18,7 +19,7 @@ defmodule Vibetodo.Projects.Project do
   @doc false
   def changeset(project, attrs) do
     project
-    |> cast(attrs, [:title, :status, :notes, :area_id])
+    |> cast(attrs, [:title, :status, :notes, :area_id, :last_reviewed_at])
     |> validate_required([:title])
     |> validate_inclusion(:status, @statuses)
   end

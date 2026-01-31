@@ -5,6 +5,7 @@ defmodule Vibetodo.Areas.Area do
   schema "areas" do
     field :title, :string
     field :description, :string
+    field :last_reviewed_at, :utc_datetime
 
     has_many :projects, Vibetodo.Projects.Project
     has_many :todos, Vibetodo.Todos.Todo
@@ -15,7 +16,7 @@ defmodule Vibetodo.Areas.Area do
   @doc false
   def changeset(area, attrs) do
     area
-    |> cast(attrs, [:title, :description])
+    |> cast(attrs, [:title, :description, :last_reviewed_at])
     |> validate_required([:title])
   end
 end
