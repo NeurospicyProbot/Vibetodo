@@ -1,6 +1,6 @@
 # Deployment
 
-Vibetodo is deployed on Fly.io with SQLite persistence and CI/CD via GitHub Actions.
+Vibetodo is deployed on [Fly.io](https://fly.io) with SQLite persistence and CI/CD via GitHub Actions.
 
 ## Architecture
 
