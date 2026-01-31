@@ -14,7 +14,8 @@ defmodule VibetodoWeb.TodoLive do
      |> assign(:new_project, "")
      |> assign(:selected_project, nil)
      |> assign(:show_project_form, false)
-     |> assign(:view_mode, :inbox)}
+     |> assign(:view_mode, :inbox)
+     |> assign(:processing_index, 0)}
   end
 
   @impl true
@@ -87,6 +88,72 @@ defmodule VibetodoWeb.TodoLive do
      socket
      |> assign(:selected_project, nil)
      |> assign(:view_mode, :next_actions)}
+  end
+
+  @impl true
+  def handle_event("start_processing", _, socket) do
+    {:noreply,
+     socket
+     |> assign(:selected_project, nil)
+     |> assign(:view_mode, :processing)
+     |> assign(:processing_index, 0)}
+  end
+
+  @impl true
+  def handle_event("stop_processing", _, socket) do
+    {:noreply,
+     socket
+     |> assign(:view_mode, :inbox)}
+  end
+
+  @impl true
+  def handle_event("process_delete", %{"id" => id}, socket) do
+    todo = Todos.get_todo!(id)
+    {:ok, _} = Todos.delete_todo(todo)
+
+    {:noreply,
+     socket
+     |> assign(:todos, Todos.list_todos())
+     |> advance_processing()}
+  end
+
+  @impl true
+  def handle_event("process_done", %{"id" => id}, socket) do
+    todo = Todos.get_todo!(id)
+    {:ok, _} = Todos.update_todo(todo, %{completed: true})
+
+    {:noreply,
+     socket
+     |> assign(:todos, Todos.list_todos())
+     |> advance_processing()}
+  end
+
+  @impl true
+  def handle_event("process_next_action", %{"id" => id}, socket) do
+    todo = Todos.get_todo!(id)
+    {:ok, _} = Todos.update_todo(todo, %{is_next_action: true})
+
+    {:noreply,
+     socket
+     |> assign(:todos, Todos.list_todos())
+     |> advance_processing()}
+  end
+
+  @impl true
+  def handle_event("process_assign_project", %{"id" => id, "project_id" => project_id}, socket) do
+    todo = Todos.get_todo!(id)
+    project_id = String.to_integer(project_id)
+    {:ok, _} = Todos.update_todo(todo, %{project_id: project_id})
+
+    {:noreply,
+     socket
+     |> assign(:todos, Todos.list_todos())
+     |> advance_processing()}
+  end
+
+  @impl true
+  def handle_event("process_skip", _, socket) do
+    {:noreply, advance_processing(socket)}
   end
 
   @impl true
@@ -163,6 +230,26 @@ defmodule VibetodoWeb.TodoLive do
     else
       socket
     end
+  end
+
+  defp advance_processing(socket) do
+    inbox_items = get_inbox_items(socket.assigns.todos)
+    new_index = socket.assigns.processing_index
+
+    if new_index >= length(inbox_items) do
+      socket
+      |> assign(:view_mode, :inbox)
+      |> assign(:processing_index, 0)
+    else
+      socket
+    end
+  end
+
+  defp get_inbox_items(todos), do: Enum.filter(todos, &is_nil(&1.project_id))
+
+  defp current_processing_item(todos, index) do
+    inbox_items = get_inbox_items(todos)
+    Enum.at(inbox_items, index)
   end
 
   defp filtered_todos(todos, nil, :inbox), do: Enum.filter(todos, &is_nil(&1.project_id))
@@ -274,10 +361,29 @@ defmodule VibetodoWeb.TodoLive do
               <%= cond do %>
                 <% @selected_project -> %><%= @selected_project.title %>
                 <% @view_mode == :next_actions -> %>Next Actions
+                <% @view_mode == :processing -> %>Processing Inbox
                 <% true -> %>Inbox
               <% end %>
             </h1>
-            <span class="text-xs text-gray-400">Press / to capture</span>
+            <div class="flex items-center gap-3">
+              <%= if @view_mode == :inbox && inbox_count(@todos) > 0 do %>
+                <button
+                  phx-click="start_processing"
+                  class="px-3 py-1 text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                >
+                  Process
+                </button>
+              <% end %>
+              <%= if @view_mode == :processing do %>
+                <button
+                  phx-click="stop_processing"
+                  class="px-3 py-1 text-sm bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors"
+                >
+                  Exit
+                </button>
+              <% end %>
+              <span class="text-xs text-gray-400">Press / to capture</span>
+            </div>
           </div>
 
           <form phx-submit="add" class="flex gap-2 mb-6">
@@ -300,6 +406,90 @@ defmodule VibetodoWeb.TodoLive do
             </button>
           </form>
 
+          <%= if @view_mode == :processing do %>
+            <% current_item = current_processing_item(@todos, @processing_index) %>
+            <%= if current_item do %>
+              <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                <div class="text-center mb-6">
+                  <p class="text-xs text-gray-400 mb-2">
+                    Item <%= @processing_index + 1 %> of <%= inbox_count(@todos) %>
+                  </p>
+                  <h2 class="text-xl font-medium text-gray-800"><%= current_item.title %></h2>
+                </div>
+
+                <div class="border-t pt-6">
+                  <p class="text-sm text-gray-500 text-center mb-4">Is this actionable?</p>
+
+                  <div class="grid grid-cols-2 gap-3 mb-4">
+                    <button
+                      phx-click="process_delete"
+                      phx-value-id={current_item.id}
+                      class="px-4 py-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium"
+                    >
+                      Delete
+                      <span class="block text-xs font-normal text-red-400">Not actionable</span>
+                    </button>
+                    <button
+                      phx-click="process_done"
+                      phx-value-id={current_item.id}
+                      class="px-4 py-3 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors text-sm font-medium"
+                    >
+                      Done
+                      <span class="block text-xs font-normal text-green-400">&lt; 2 minutes</span>
+                    </button>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-3 mb-4">
+                    <button
+                      phx-click="process_next_action"
+                      phx-value-id={current_item.id}
+                      class="px-4 py-3 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 transition-colors text-sm font-medium"
+                    >
+                      Next Action
+                      <span class="block text-xs font-normal text-amber-400">Do it soon</span>
+                    </button>
+                    <button
+                      phx-click="process_skip"
+                      class="px-4 py-3 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium"
+                    >
+                      Skip
+                      <span class="block text-xs font-normal text-gray-400">Decide later</span>
+                    </button>
+                  </div>
+
+                  <%= if @projects != [] do %>
+                    <div class="border-t pt-4">
+                      <p class="text-xs text-gray-400 mb-2 text-center">Or assign to a project:</p>
+                      <div class="flex flex-wrap gap-2 justify-center">
+                        <%= for project <- @projects do %>
+                          <button
+                            phx-click="process_assign_project"
+                            phx-value-id={current_item.id}
+                            phx-value-project_id={project.id}
+                            class="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                          >
+                            <%= project.title %>
+                          </button>
+                        <% end %>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% else %>
+              <div class="text-center py-12">
+                <div class="text-5xl mb-4">🎉</div>
+                <h2 class="text-xl font-medium text-gray-800 mb-2">Inbox Zero!</h2>
+                <p class="text-gray-500 mb-4">All items have been processed.</p>
+                <button
+                  phx-click="stop_processing"
+                  class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                >
+                  Back to Inbox
+                </button>
+              </div>
+            <% end %>
+          <% else %>
           <ul class="space-y-2">
             <%= for todo <- filtered_todos(@todos, @selected_project, @view_mode) do %>
               <li class="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm group">
@@ -369,6 +559,7 @@ defmodule VibetodoWeb.TodoLive do
             <%= length(todos) %> item<%= if length(todos) != 1, do: "s" %>
             · <%= Enum.count(todos, & &1.completed) %> completed
           </p>
+          <% end %>
         </div>
       </div>
     </div>
