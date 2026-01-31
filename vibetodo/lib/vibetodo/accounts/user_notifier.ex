@@ -6,10 +6,12 @@ defmodule Vibetodo.Accounts.UserNotifier do
 
   # Delivers the email using the application mailer.
   defp deliver(recipient, subject, body) do
+    from_email = Application.get_env(:vibetodo, :from_email, "onboarding@resend.dev")
+
     email =
       new()
       |> to(recipient)
-      |> from({"Vibetodo", "contact@example.com"})
+      |> from({"Vibetodo", from_email})
       |> subject(subject)
       |> text_body(body)
 

@@ -69,6 +69,11 @@ if config_env() == :prod do
       api_key: resend_api_key
   end
 
+  # Configure from email address (default: onboarding@resend.dev for testing)
+  if from_email = System.get_env("FROM_EMAIL") do
+    config :vibetodo, :from_email, from_email
+  end
+
   # ## SSL Support
   #
   # To get SSL working, you will need to add the `https` key
