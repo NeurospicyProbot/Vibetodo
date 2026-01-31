@@ -99,6 +99,14 @@ defmodule VibetodoWeb.TodoLive do
   end
 
   @impl true
+  def handle_event("select_someday_maybe", _, socket) do
+    {:noreply,
+     socket
+     |> assign(:selected_project, nil)
+     |> assign(:view_mode, :someday_maybe)}
+  end
+
+  @impl true
   def handle_event("mark_waiting_for", %{"id" => id, "person" => person}, socket) do
     person = String.trim(person)
 
@@ -168,6 +176,17 @@ defmodule VibetodoWeb.TodoLive do
   def handle_event("process_next_action", %{"id" => id}, socket) do
     todo = Todos.get_todo!(id)
     {:ok, _} = Todos.update_todo(todo, %{is_next_action: true})
+
+    {:noreply,
+     socket
+     |> assign(:todos, Todos.list_todos())
+     |> advance_processing()}
+  end
+
+  @impl true
+  def handle_event("process_someday_maybe", %{"id" => id}, socket) do
+    todo = Todos.get_todo!(id)
+    {:ok, _} = Todos.update_todo(todo, %{is_someday_maybe: true})
 
     {:noreply,
      socket
@@ -308,11 +327,14 @@ defmodule VibetodoWeb.TodoLive do
   defp filtered_todos(todos, nil, :inbox), do: Enum.filter(todos, &is_nil(&1.project_id))
   defp filtered_todos(todos, nil, :next_actions), do: Enum.filter(todos, &(&1.is_next_action && !&1.completed))
   defp filtered_todos(todos, nil, :waiting_for), do: Enum.filter(todos, &(&1.waiting_for && !&1.completed))
+  defp filtered_todos(todos, nil, :someday_maybe), do: Enum.filter(todos, &(&1.is_someday_maybe && !&1.completed))
   defp filtered_todos(_todos, project, _view_mode), do: project.todos
 
   defp next_actions_count(todos), do: Enum.count(todos, &(&1.is_next_action && !&1.completed))
 
   defp waiting_for_count(todos), do: Enum.count(todos, &(&1.waiting_for && !&1.completed))
+
+  defp someday_maybe_count(todos), do: Enum.count(todos, &(&1.is_someday_maybe && !&1.completed))
 
   defp inbox_count(todos), do: Enum.count(todos, &is_nil(&1.project_id))
 
@@ -359,7 +381,7 @@ defmodule VibetodoWeb.TodoLive do
         <!-- Waiting For -->
         <button
           phx-click="select_waiting_for"
-          class={"w-full text-left px-3 py-2 rounded-lg mb-2 flex items-center justify-between #{if @view_mode == :waiting_for, do: "bg-cyan-100 text-cyan-700", else: "hover:bg-gray-100 text-gray-700"}"}
+          class={"w-full text-left px-3 py-2 rounded-lg mb-1 flex items-center justify-between #{if @view_mode == :waiting_for, do: "bg-cyan-100 text-cyan-700", else: "hover:bg-gray-100 text-gray-700"}"}
         >
           <span class="flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -368,6 +390,20 @@ defmodule VibetodoWeb.TodoLive do
             Waiting For
           </span>
           <span class="text-sm text-gray-500"><%= waiting_for_count(@todos) %></span>
+        </button>
+
+        <!-- Someday/Maybe -->
+        <button
+          phx-click="select_someday_maybe"
+          class={"w-full text-left px-3 py-2 rounded-lg mb-2 flex items-center justify-between #{if @view_mode == :someday_maybe, do: "bg-violet-100 text-violet-700", else: "hover:bg-gray-100 text-gray-700"}"}
+        >
+          <span class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
+            </svg>
+            Someday/Maybe
+          </span>
+          <span class="text-sm text-gray-500"><%= someday_maybe_count(@todos) %></span>
         </button>
 
         <!-- Projects Header -->
@@ -432,6 +468,7 @@ defmodule VibetodoWeb.TodoLive do
                 <% @selected_project -> %><%= @selected_project.title %>
                 <% @view_mode == :next_actions -> %>Next Actions
                 <% @view_mode == :waiting_for -> %>Waiting For
+                <% @view_mode == :someday_maybe -> %>Someday/Maybe
                 <% @view_mode == :processing -> %>Processing Inbox
                 <% true -> %>Inbox
               <% end %>
@@ -520,11 +557,21 @@ defmodule VibetodoWeb.TodoLive do
                       <span class="block text-xs font-normal text-amber-400">Do it soon</span>
                     </button>
                     <button
-                      phx-click="process_skip"
-                      class="px-4 py-3 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium"
+                      phx-click="process_someday_maybe"
+                      phx-value-id={current_item.id}
+                      class="px-4 py-3 bg-violet-50 text-violet-600 rounded-lg hover:bg-violet-100 transition-colors text-sm font-medium"
                     >
-                      Skip
-                      <span class="block text-xs font-normal text-gray-400">Decide later</span>
+                      Someday/Maybe
+                      <span class="block text-xs font-normal text-violet-400">Not now</span>
+                    </button>
+                  </div>
+
+                  <div class="mb-4">
+                    <button
+                      phx-click="process_skip"
+                      class="w-full px-4 py-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium"
+                    >
+                      Skip · Decide later
                     </button>
                   </div>
 
@@ -647,6 +694,7 @@ defmodule VibetodoWeb.TodoLive do
                 <% @selected_project -> %>No tasks in this project yet.
                 <% @view_mode == :next_actions -> %>No next actions. Star items to mark them as next actions!
                 <% @view_mode == :waiting_for -> %>Nothing in Waiting For. Use the clock icon to delegate items.
+                <% @view_mode == :someday_maybe -> %>No someday/maybe items. Park ideas here during processing!
                 <% true -> %>Your inbox is empty. Capture what's on your mind!
               <% end %>
             </p>

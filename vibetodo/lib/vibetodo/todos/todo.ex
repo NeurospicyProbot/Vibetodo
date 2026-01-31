@@ -6,6 +6,7 @@ defmodule Vibetodo.Todos.Todo do
     field :title, :string
     field :completed, :boolean, default: false
     field :is_next_action, :boolean, default: false
+    field :is_someday_maybe, :boolean, default: false
     field :waiting_for, :string
     field :delegated_at, :utc_datetime
 
@@ -17,7 +18,7 @@ defmodule Vibetodo.Todos.Todo do
   @doc false
   def changeset(todo, attrs) do
     todo
-    |> cast(attrs, [:title, :completed, :project_id, :is_next_action, :waiting_for, :delegated_at])
+    |> cast(attrs, [:title, :completed, :project_id, :is_next_action, :is_someday_maybe, :waiting_for, :delegated_at])
     |> validate_required([:title])
   end
 end

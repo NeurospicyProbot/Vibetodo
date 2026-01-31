@@ -94,4 +94,21 @@ defmodule Vibetodo.Todos do
   def clear_waiting_for(%Todo{} = todo) do
     update_todo(todo, %{waiting_for: nil, delegated_at: nil})
   end
+
+  @doc """
+  Returns all someday/maybe items (incomplete todos marked as someday/maybe).
+  """
+  def list_someday_maybe do
+    Todo
+    |> where([t], t.is_someday_maybe == true and t.completed == false)
+    |> order_by(asc: :inserted_at)
+    |> Repo.all()
+  end
+
+  @doc """
+  Toggles the someday/maybe status of a todo.
+  """
+  def toggle_someday_maybe(%Todo{} = todo) do
+    update_todo(todo, %{is_someday_maybe: !todo.is_someday_maybe})
+  end
 end
