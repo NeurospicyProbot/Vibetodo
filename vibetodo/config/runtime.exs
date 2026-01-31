@@ -62,15 +62,11 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base
 
-  # Configure Mailgun for production email delivery
-  mailgun_api_key = System.get_env("MAILGUN_API_KEY")
-  mailgun_domain = System.get_env("MAILGUN_DOMAIN")
-
-  if mailgun_api_key && mailgun_domain do
+  # Configure Resend for production email delivery
+  if resend_api_key = System.get_env("RESEND_API_KEY") do
     config :vibetodo, Vibetodo.Mailer,
-      adapter: Swoosh.Adapters.Mailgun,
-      api_key: mailgun_api_key,
-      domain: mailgun_domain
+      adapter: Swoosh.Adapters.Resend,
+      api_key: resend_api_key
   end
 
   # ## SSL Support
