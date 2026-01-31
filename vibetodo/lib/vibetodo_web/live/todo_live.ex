@@ -13,7 +13,8 @@ defmodule VibetodoWeb.TodoLive do
      |> assign(:new_todo, "")
      |> assign(:new_project, "")
      |> assign(:selected_project, nil)
-     |> assign(:show_project_form, false)}
+     |> assign(:show_project_form, false)
+     |> assign(:view_mode, :inbox)}
   end
 
   @impl true
@@ -74,13 +75,38 @@ defmodule VibetodoWeb.TodoLive do
 
   @impl true
   def handle_event("select_inbox", _, socket) do
-    {:noreply, assign(socket, :selected_project, nil)}
+    {:noreply,
+     socket
+     |> assign(:selected_project, nil)
+     |> assign(:view_mode, :inbox)}
+  end
+
+  @impl true
+  def handle_event("select_next_actions", _, socket) do
+    {:noreply,
+     socket
+     |> assign(:selected_project, nil)
+     |> assign(:view_mode, :next_actions)}
+  end
+
+  @impl true
+  def handle_event("toggle_next_action", %{"id" => id}, socket) do
+    todo = Todos.get_todo!(id)
+    {:ok, _todo} = Todos.toggle_next_action(todo)
+
+    {:noreply,
+     socket
+     |> assign(:todos, Todos.list_todos())
+     |> maybe_refresh_project()}
   end
 
   @impl true
   def handle_event("select_project", %{"id" => id}, socket) do
     project = Projects.get_project!(id)
-    {:noreply, assign(socket, :selected_project, project)}
+    {:noreply,
+     socket
+     |> assign(:selected_project, project)
+     |> assign(:view_mode, :project)}
   end
 
   @impl true
@@ -139,8 +165,11 @@ defmodule VibetodoWeb.TodoLive do
     end
   end
 
-  defp filtered_todos(todos, nil), do: Enum.filter(todos, &is_nil(&1.project_id))
-  defp filtered_todos(_todos, project), do: project.todos
+  defp filtered_todos(todos, nil, :inbox), do: Enum.filter(todos, &is_nil(&1.project_id))
+  defp filtered_todos(todos, nil, :next_actions), do: Enum.filter(todos, &(&1.is_next_action && !&1.completed))
+  defp filtered_todos(_todos, project, _view_mode), do: project.todos
+
+  defp next_actions_count(todos), do: Enum.count(todos, &(&1.is_next_action && !&1.completed))
 
   defp inbox_count(todos), do: Enum.count(todos, &is_nil(&1.project_id))
 
@@ -159,7 +188,7 @@ defmodule VibetodoWeb.TodoLive do
         <!-- Inbox -->
         <button
           phx-click="select_inbox"
-          class={"w-full text-left px-3 py-2 rounded-lg mb-2 flex items-center justify-between #{if @selected_project == nil, do: "bg-blue-100 text-blue-700", else: "hover:bg-gray-100 text-gray-700"}"}
+          class={"w-full text-left px-3 py-2 rounded-lg mb-1 flex items-center justify-between #{if @view_mode == :inbox, do: "bg-blue-100 text-blue-700", else: "hover:bg-gray-100 text-gray-700"}"}
         >
           <span class="flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -168,6 +197,20 @@ defmodule VibetodoWeb.TodoLive do
             Inbox
           </span>
           <span class="text-sm text-gray-500"><%= inbox_count(@todos) %></span>
+        </button>
+
+        <!-- Next Actions -->
+        <button
+          phx-click="select_next_actions"
+          class={"w-full text-left px-3 py-2 rounded-lg mb-2 flex items-center justify-between #{if @view_mode == :next_actions, do: "bg-amber-100 text-amber-700", else: "hover:bg-gray-100 text-gray-700"}"}
+        >
+          <span class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            Next Actions
+          </span>
+          <span class="text-sm text-gray-500"><%= next_actions_count(@todos) %></span>
         </button>
 
         <!-- Projects Header -->
@@ -228,7 +271,11 @@ defmodule VibetodoWeb.TodoLive do
         <div class="max-w-2xl mx-auto">
           <div class="flex items-center justify-between mb-6">
             <h1 class="text-2xl font-bold text-gray-800">
-              <%= if @selected_project, do: @selected_project.title, else: "Inbox" %>
+              <%= cond do %>
+                <% @selected_project -> %><%= @selected_project.title %>
+                <% @view_mode == :next_actions -> %>Next Actions
+                <% true -> %>Inbox
+              <% end %>
             </h1>
             <span class="text-xs text-gray-400">Press / to capture</span>
           </div>
@@ -254,8 +301,18 @@ defmodule VibetodoWeb.TodoLive do
           </form>
 
           <ul class="space-y-2">
-            <%= for todo <- filtered_todos(@todos, @selected_project) do %>
+            <%= for todo <- filtered_todos(@todos, @selected_project, @view_mode) do %>
               <li class="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm group">
+                <button
+                  phx-click="toggle_next_action"
+                  phx-value-id={todo.id}
+                  class={"flex-shrink-0 #{if todo.is_next_action, do: "text-amber-500", else: "text-gray-300 hover:text-amber-400"}"}
+                  title={if todo.is_next_action, do: "Remove from Next Actions", else: "Mark as Next Action"}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                </button>
                 <input
                   type="checkbox"
                   checked={todo.completed}
@@ -297,18 +354,18 @@ defmodule VibetodoWeb.TodoLive do
             <% end %>
           </ul>
 
-          <%= if filtered_todos(@todos, @selected_project) == [] do %>
+          <%= if filtered_todos(@todos, @selected_project, @view_mode) == [] do %>
             <p class="text-center text-gray-500 mt-8">
-              <%= if @selected_project do %>
-                No tasks in this project yet.
-              <% else %>
-                Your inbox is empty. Capture what's on your mind!
+              <%= cond do %>
+                <% @selected_project -> %>No tasks in this project yet.
+                <% @view_mode == :next_actions -> %>No next actions. Star items to mark them as next actions!
+                <% true -> %>Your inbox is empty. Capture what's on your mind!
               <% end %>
             </p>
           <% end %>
 
           <p class="text-xs text-gray-400 mt-6 text-center">
-            <% todos = filtered_todos(@todos, @selected_project) %>
+            <% todos = filtered_todos(@todos, @selected_project, @view_mode) %>
             <%= length(todos) %> item<%= if length(todos) != 1, do: "s" %>
             · <%= Enum.count(todos, & &1.completed) %> completed
           </p>

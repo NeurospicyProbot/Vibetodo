@@ -53,4 +53,21 @@ defmodule Vibetodo.Todos do
   def toggle_todo(%Todo{} = todo) do
     update_todo(todo, %{completed: !todo.completed})
   end
+
+  @doc """
+  Toggles the next action status of a todo.
+  """
+  def toggle_next_action(%Todo{} = todo) do
+    update_todo(todo, %{is_next_action: !todo.is_next_action})
+  end
+
+  @doc """
+  Returns all next actions (incomplete todos marked as next action).
+  """
+  def list_next_actions do
+    Todo
+    |> where([t], t.is_next_action == true and t.completed == false)
+    |> order_by(asc: :inserted_at)
+    |> Repo.all()
+  end
 end

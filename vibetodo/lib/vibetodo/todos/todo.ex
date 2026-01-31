@@ -5,6 +5,7 @@ defmodule Vibetodo.Todos.Todo do
   schema "todos" do
     field :title, :string
     field :completed, :boolean, default: false
+    field :is_next_action, :boolean, default: false
 
     belongs_to :project, Vibetodo.Projects.Project
 
@@ -14,7 +15,7 @@ defmodule Vibetodo.Todos.Todo do
   @doc false
   def changeset(todo, attrs) do
     todo
-    |> cast(attrs, [:title, :completed, :project_id])
+    |> cast(attrs, [:title, :completed, :project_id, :is_next_action])
     |> validate_required([:title])
   end
 end
