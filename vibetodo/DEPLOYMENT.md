@@ -103,6 +103,46 @@ fly status
 curl https://vibetodo.fly.dev/api/health
 ```
 
+## Email (Resend)
+
+Transactional emails (registration, login links) are sent via [Resend](https://resend.com).
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `RESEND_API_KEY` | Yes | API key from resend.com/api-keys |
+| `FROM_EMAIL` | No | Sender address (default: `onboarding@resend.dev`) |
+
+### Setup
+
+1. Sign up at [resend.com](https://resend.com) (free: 3,000 emails/month)
+2. Get your API key from Settings → API Keys
+3. Add `RESEND_API_KEY` to GitHub Secrets
+4. The CI workflow automatically sets it on Fly.io during deploy
+
+### Using a Custom Domain
+
+The default `onboarding@resend.dev` is for testing only. For production:
+
+1. Add and verify your domain at [resend.com/domains](https://resend.com/domains)
+2. Add DNS records (SPF, DKIM) as instructed
+3. Add `FROM_EMAIL` to GitHub Secrets (e.g., `noreply@yourdomain.com`)
+4. Update `.github/workflows/ci.yml` to set `FROM_EMAIL` on Fly.io:
+   ```yaml
+   - name: Set Fly.io secrets
+     run: flyctl secrets set RESEND_API_KEY="${RESEND_API_KEY}" FROM_EMAIL="${FROM_EMAIL}" --stage
+     env:
+       FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+       RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+       FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
+   ```
+
+### Local Development
+
+Emails are captured in memory using Swoosh's Local adapter. View them at:
+http://localhost:4000/dev/mailbox
+
 ## Configuration Files
 
 - `fly.toml` - Fly.io app configuration
