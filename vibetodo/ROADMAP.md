@@ -2,15 +2,17 @@
 
 Structured around the 5 GTD Steps: **Capture → Clarify → Organize → Reflect → Engage**
 
+Live at: https://vibetodo.fly.dev
+
 ---
 
 ## 1. Capture
 *Collect what has your attention*
 
-### Inbox — Vibetodo-3vk
-- [ ] Rename todo list to "Inbox"
-- [ ] Keyboard shortcut for rapid capture (Ctrl+Enter / Cmd+Enter)
-- [ ] Minimal friction: title only, process later
+### Inbox ✓ — Vibetodo-3vk
+- [x] Rename todo list to "Inbox"
+- [x] Keyboard shortcut for rapid capture (`/` to focus)
+- [x] Minimal friction: title only, process later
 - [ ] Mobile-friendly quick add
 
 ---
@@ -18,47 +20,48 @@ Structured around the 5 GTD Steps: **Capture → Clarify → Organize → Reflec
 ## 2. Clarify
 *Process what each item means*
 
-### Processing Workflow — Vibetodo-b2c
-- [ ] "Process" mode to work through inbox items one by one
-- [ ] Decision tree: Is it actionable? → What's the next action? → Is it a project?
-- [ ] Two-minute rule prompt: "Can you do this in 2 minutes?"
+### Processing Workflow ✓ — Vibetodo-b2c
+- [x] "Process" mode to work through inbox items one by one
+- [x] Decision tree: Delete / Done / Next Action / Someday/Maybe / Delegate / Assign to Project
+- [x] Two-minute rule prompt ("Done" for quick tasks)
+- [x] Skip option for items needing more thought
 
 ### Two-Minute Rule — Vibetodo-ihn
 - [ ] Estimated time field
 - [ ] Filter for quick wins (< 2 minutes)
 - [ ] Visual indicator for quick tasks
-- [ ] "Do it now" prompt during clarify
 
 ---
 
 ## 3. Organize
 *Put items where they belong*
 
-### Projects — Vibetodo-mm8
-- [ ] Project schema (multi-step outcomes)
-- [ ] Link todos to projects
-- [ ] Project list with completion progress
-- [ ] Next action indicator per project
+### Projects ✓ — Vibetodo-mm8
+- [x] Project schema (multi-step outcomes)
+- [x] Link todos to projects
+- [x] Project list with completion progress
+- [x] Sidebar navigation
 
-### Contexts (@tags) — Vibetodo-w0t
+### Next Actions ✓ — Vibetodo-mjs
+- [x] Star toggle to mark next actions
+- [x] Sidebar view with count
+- [x] Filter for actionable items only
+
+### Waiting For ✓ — Vibetodo-x0o
+- [x] "Waiting For" field for delegated items
+- [x] Track who you're waiting on
+- [x] Date delegated for follow-up
+- [x] Sidebar view with count
+
+### Someday/Maybe ✓ — Vibetodo-n2b
+- [x] Someday/Maybe list for uncommitted items
+- [x] Mark items during processing
+- [x] Sidebar view with count
+
+### Contexts (@tags) — Vibetodo-w0t (P4 - Backlog)
 - [ ] Context tags (@home, @work, @phone, @computer, @errands)
 - [ ] Filter by context
 - [ ] Custom context creation
-
-### Next Actions — Vibetodo-mjs
-- [ ] Distinguish "next actions" from other todos
-- [ ] Every project needs at least one next action
-- [ ] Quick filter for actionable items
-
-### Waiting For — Vibetodo-x0o
-- [ ] "Waiting For" status for delegated items
-- [ ] Track who/what you're waiting on
-- [ ] Date delegated for follow-up
-
-### Someday/Maybe — Vibetodo-n2b
-- [ ] Someday/Maybe list for uncommitted items
-- [ ] Move items between Inbox ↔ Someday/Maybe
-- [ ] Periodic review prompts
 
 ### Calendar & Tickler — Vibetodo-egp
 - [ ] Due dates with time
@@ -95,11 +98,6 @@ Structured around the 5 GTD Steps: **Capture → Clarify → Organize → Reflec
 ## 5. Engage
 *Choose and do*
 
-### Context Views — Vibetodo-w0t
-- [ ] "@work" view shows only work tasks
-- [ ] "@home" view shows only home tasks
-- [ ] Location/energy/time-based filtering
-
 ### Focus Mode — Vibetodo-9sh
 - [ ] Single-task view
 - [ ] Timer integration (Pomodoro-style)
@@ -114,17 +112,17 @@ Structured around the 5 GTD Steps: **Capture → Clarify → Organize → Reflec
 - [x] SQLite with persistent volume
 - [x] Production configuration
 
-### CI/CD — Vibetodo-835
-- [ ] GitHub Actions for testing
-- [ ] Auto-deploy on main push
-- [ ] Health check endpoint
+### CI/CD ✓ — Vibetodo-835
+- [x] GitHub Actions for testing
+- [x] Auto-deploy on main push
+- [x] Health check endpoint (`/api/health`)
 
 ### Monitoring — Vibetodo-4a7
 - [ ] Error tracking (Sentry)
 - [ ] Log aggregation
 - [ ] Application metrics
 
-### Database — Vibetodo-3tf
+### Database — Vibetodo-3tf (P4 - Backlog)
 - [ ] Migrate to PostgreSQL (when needed)
 
 ### Mobile — Vibetodo-2qx
@@ -134,25 +132,26 @@ Structured around the 5 GTD Steps: **Capture → Clarify → Organize → Reflec
 
 ---
 
-## Implementation Order
+## Progress Summary
 
-**Phase 1 - Core Loop**
-1. Capture: Inbox (Vibetodo-3vk)
-2. Organize: Projects (Vibetodo-mm8)
-3. Organize: Next Actions (Vibetodo-mjs)
+| Phase | Status |
+|-------|--------|
+| **Phase 1 - Core Loop** | ✓ Complete |
+| **Phase 2 - Full GTD** | ✓ Complete (Contexts deprioritized) |
+| **Phase 3 - Review & Engage** | Not started |
+| **Phase 4 - Polish** | Not started |
 
-**Phase 2 - Full GTD**
-4. Clarify: Processing Workflow (Vibetodo-b2c)
-5. Organize: Contexts (Vibetodo-w0t)
-6. Organize: Waiting For (Vibetodo-x0o)
-7. Organize: Someday/Maybe (Vibetodo-n2b)
+### Completed Features
+1. ✓ Inbox (Capture)
+2. ✓ Projects (Organize)
+3. ✓ Next Actions (Organize)
+4. ✓ Processing Workflow (Clarify)
+5. ✓ Waiting For (Organize)
+6. ✓ Someday/Maybe (Organize)
+7. ✓ CI/CD Pipeline (Infrastructure)
 
-**Phase 3 - Review & Engage**
-8. Reflect: Weekly Review (Vibetodo-u5y)
-9. Engage: Focus Mode (Vibetodo-9sh)
-10. Reflect: Daily Review (Vibetodo-e56)
-
-**Phase 4 - Polish**
-11. Clarify: Two-Minute Rule (Vibetodo-ihn)
-12. Organize: Calendar & Tickler (Vibetodo-egp)
-13. Organize: Reference Material (Vibetodo-a1l)
+### Next Up (P3)
+- Weekly Review
+- Daily Review
+- Focus Mode
+- Two-Minute Rule helpers
