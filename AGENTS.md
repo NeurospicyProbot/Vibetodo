@@ -12,6 +12,11 @@ bd close <id>         # Complete work
 bd sync               # Sync with git
 ```
 
+## Worklow (While Coding)
+1. **File issues as you go** - Create an issue for anything that will take longer than 2 minutes. Make liberal use of discovered-from and dependencies.
+2. **Break it down** - Turn tasks into small atomic units of work with clear acceptance criteria.
+
+
 ## Landing the Plane (Session Completion)
 
 **When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
@@ -20,6 +25,7 @@ bd sync               # Sync with git
 
 1. **File issues for remaining work** - Create issues for anything that needs follow-up
 2. **Run quality gates** (if code changed) - Tests, linters, builds
+3. **Commit** Ensure git working is clean and all code is committed.
 3. **Update issue status** - Close finished work, update in-progress items
 4. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
