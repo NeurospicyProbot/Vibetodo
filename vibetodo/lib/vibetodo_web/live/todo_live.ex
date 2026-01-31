@@ -963,7 +963,7 @@ defmodule VibetodoWeb.TodoLive do
               phx-change="update_input"
               phx-hook="FocusInput"
               placeholder="What's on your mind?"
-              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               autofocus
             />
             <button
@@ -1321,7 +1321,7 @@ defmodule VibetodoWeb.TodoLive do
                         value={@new_todo}
                         phx-change="update_input"
                         placeholder="Capture new thoughts..."
-                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-gray-900"
                       />
                       <button
                         type="submit"
